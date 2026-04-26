@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono:wght@400;700&family=Pixelify+Sans:wght@400;700&family=Inter:wght@300;400;500;600&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "Courier New", Courier, monospace;
+  --font-pixel: "Pixelify Sans", system-ui, sans-serif;
+
+  --color-bg: #0f0f0f;
+  --color-card: #1a1a1a;
+  --color-accent: #f87171;
+  --color-accent-soft: rgba(248, 113, 113, 0.1);
+  --color-muted: #9ca3af;
+  --color-border: #262626;
+  --color-border-hover: #333;
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-gray-200 font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-pixel tracking-tight;
+  }
+}
+
+.mono-text {
+  font-family: var(--font-mono);
+}
+
+.pixel-text {
+  font-family: var(--font-pixel);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-bg;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-border rounded-full hover:bg-border-hover;
+}
