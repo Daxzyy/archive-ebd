@@ -10,7 +10,6 @@ import {
   CheckCircle, 
   AlertTriangle,
   PlusCircle,
-  X,
   ArrowLeft,
   Loader2
 } from 'lucide-react';
@@ -24,7 +23,6 @@ export default function Admin() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  // Form State
   const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
@@ -38,17 +36,17 @@ export default function Admin() {
     setError(null);
     setSuccess(false);
 
+    // Validate URL format only (no fetch to avoid CORS issues)
     try {
-  new URL(imageUrl);
-  if (!imageUrl.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i)) {
-    throw new Error('Not an image URL');
-  }
-} catch (e) {
-  setError('Invalid image URL format. Must be a direct link to an image file.');
-  setLoading(false);
-  return;
-}
+      new URL(imageUrl);
+    } catch {
+      setError('Invalid image URL format.');
+      setLoading(false);
+      return;
+    }
 
+    try {
+      const supabase = getSupabase();
       const { error: dbError } = await supabase.from('archives').insert([
         {
           image_url: imageUrl,
@@ -64,15 +62,12 @@ export default function Admin() {
         setError(dbError.message);
       } else {
         setSuccess(true);
-        // Reset form
         setImageUrl('');
         setDescription('');
         setDate('');
         setDateUnknown(false);
         setTags('');
         setSource('');
-        
-        // Navigate back after delay
         setTimeout(() => navigate('/'), 2000);
       }
     } catch (e) {
@@ -109,7 +104,7 @@ export default function Admin() {
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left Column: Image & Basic Info */}
+            {/* Left Column */}
             <div className="space-y-8">
               <div className="bg-card border border-border rounded-[2rem] p-8 shadow-xl space-y-6">
                 <div className="flex items-center gap-2 border-b border-border pb-4 mb-4">
@@ -127,7 +122,6 @@ export default function Admin() {
                     onChange={(e) => setImageUrl(e.target.value)}
                     className="w-full bg-bg/50 border border-border rounded-2xl py-4 px-5 text-gray-200 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/50 transition-all font-mono text-xs"
                   />
-                  <p className="text-[9px] text-gray-600 mono-text uppercase tracking-tight">Must return 200 OK status</p>
                 </div>
 
                 {imageUrl && (
@@ -179,8 +173,7 @@ export default function Admin() {
               </div>
             </div>
 
-
-            {/* Right Column: Taxonomy & Context */}
+            {/* Right Column */}
             <div className="space-y-8">
               <div className="bg-card border border-border rounded-[2rem] p-8 shadow-xl space-y-6">
                 <div className="flex items-center gap-2 border-b border-border pb-4 mb-4">
@@ -243,7 +236,6 @@ export default function Admin() {
             </div>
           </div>
 
-
           <div className="flex flex-col items-center gap-6 pt-4">
             {error && (
               <motion.div 
@@ -289,7 +281,7 @@ export default function Admin() {
       
       <footer className="py-12 border-t border-border mt-20">
         <p className="text-center text-[10px] text-gray-600 uppercase tracking-widest font-bold mono-text">
-          System Core v1.0.4 • Eberardos Archival Network
+          © 2026 Eberardos Community
         </p>
       </footer>
     </div>
