@@ -36,6 +36,12 @@ export type Archive = {
   created_at: string;
 };
 
+type Profile = {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+};
+
 function formatDate(dateStr: string | null, unknown: boolean): string {
   if (unknown || !dateStr) return 'Unknown';
   try {
@@ -49,7 +55,7 @@ function formatDate(dateStr: string | null, unknown: boolean): string {
   }
 }
 
-function ArchiveModal({ archive, onClose }: { archive: Archive | null; onClose: () => void }) {
+function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null; onClose: () => void; profiles: Profile[] }) {
   if (!archive) return null;
 
   return (
@@ -134,7 +140,17 @@ function ArchiveModal({ archive, onClose }: { archive: Archive | null; onClose: 
                     <p className="text-gray-200 font-medium font-sans">{archive.source || 'Unknown'}</p>
                   </div>
                 </div>
-
+               <div className="flex items-start gap-4">
+  <div className="bg-border p-2.5 rounded-xl">
+    <User className="w-5 h-5 text-accent" />
+  </div>
+  <div>
+    <p className="text-[10px] text-muted uppercase tracking-widest font-bold mb-1 mono-text">Uploaded by</p>
+    <p className="text-gray-200 font-medium font-sans">
+      {profiles.find(p => p.id === archive?.uploaded_by)?.display_name || 'Unknown'}
+    </p>
+  </div>
+</div>
                 <div className="flex items-start gap-4">
                   <div className="bg-border p-2.5 rounded-xl">
                     <Tag className="w-5 h-5 text-accent" />
@@ -605,6 +621,7 @@ function ArchiveCard({ archive, onClick }: { archive: Archive; onClick: () => vo
 function Dashboard({ session }: { session: Session | null }) {
   const navigate = useNavigate();
   const [archives, setArchives] = useState<Archive[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedTag, setSelectedTag] = useState('All');
@@ -633,6 +650,8 @@ function Dashboard({ session }: { session: Session | null }) {
       });
       setAllTags(Array.from(tags).sort());
       setAllYears(Array.from(years).sort((a, b) => b.localeCompare(a)));
+      const { data: profileData } = await supabase.from('profiles').select('*');
+      setProfiles(profileData || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -827,7 +846,7 @@ function Dashboard({ session }: { session: Session | null }) {
         </div>
       </footer>
 
-      <ArchiveModal archive={selectedArchive} onClose={() => setSelectedArchive(null)} />
+      <ArchiveModal archive={selectedArchive} onClose={() => setSelectedArchive(null)} profiles={profiles} />
     </div>
   );
 }
