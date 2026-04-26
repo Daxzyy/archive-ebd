@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Lock, ArrowRight, AlertCircle } from 'lucide-react';
 import { checkPassword, setAuthenticated } from '../lib/auth';
+import { motion } from 'motion/react';
 
 export default function Login() {
   const [password, setPassword] = useState('');
@@ -14,7 +15,6 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     setError(null);
-
     try {
       const valid = await checkPassword(password);
       if (valid) {
@@ -23,9 +23,9 @@ export default function Login() {
       } else {
         setError('Wrong password');
         setShake(true);
-        setTimeout(() => setShake(false), 600);
+        setTimeout(() => setShake(false), 500);
       }
-    } catch (e) {
+    } catch {
       setError('Connection error. Try again.');
     } finally {
       setLoading(false);
@@ -33,84 +33,81 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center p-4">
-      {/* Subtle glow */}
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-accent/5 rounded-full blur-[120px] pointer-events-none" />
+    <div
+      className="min-h-screen bg-[#131313] flex items-center justify-center px-4"
+      style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}
+    >
+      <style>{`
+        @keyframes shake {
+          0%,100%{transform:translateX(0)}
+          20%{transform:translateX(-6px)}
+          40%{transform:translateX(6px)}
+          60%{transform:translateX(-4px)}
+          80%{transform:translateX(4px)}
+        }
+      `}</style>
 
-      <div className="w-full max-w-sm relative">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-card border border-border rounded-2xl mb-6 shadow-xl">
-            <Lock className="w-6 h-6 text-accent" />
+      {/* Subtle red glow */}
+      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-[100px] pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="w-full max-w-xs relative"
+      >
+        {/* Logo area */}
+        <div className="mb-8 text-center">
+          <div className="inline-flex items-center justify-center w-11 h-11 border border-white/10 bg-white/[0.04] rounded-xl mb-5">
+            <Lock className="w-4.5 h-4.5 text-red-400" style={{ width: 18, height: 18 }} />
           </div>
-          <h1 className="text-2xl font-bold text-white pixel-text tracking-tighter uppercase mb-2">
-            Eberardos Archive
+          <h1 className="text-base font-bold text-white/90 tracking-tight mb-1">
+            Eberardos <span className="text-white/25 font-normal">/</span> <span className="text-white/45 font-medium">archive</span>
           </h1>
-          <p className="text-xs text-muted mono-text tracking-widest uppercase">
-            Enter access password to continue
-          </p>
+          <p className="text-[12px] text-white/30">Enter password to access</p>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div
-            style={{
-              animation: shake ? 'shake 0.5s ease' : undefined,
-            }}
-          >
-            <style>{`
-              @keyframes shake {
-                0%, 100% { transform: translateX(0); }
-                20% { transform: translateX(-8px); }
-                40% { transform: translateX(8px); }
-                60% { transform: translateX(-5px); }
-                80% { transform: translateX(5px); }
-              }
-            `}</style>
-            <div className="relative">
-              <input
-                type="password"
-                autoFocus
-                required
-                value={password}
-                onChange={(e) => { setPassword(e.target.value); setError(null); }}
-                placeholder="••••••••••••"
-                className={`w-full bg-card border rounded-2xl py-4 px-5 text-gray-200 text-center text-xl tracking-[0.4em] placeholder:tracking-widest placeholder:text-lg focus:outline-none transition-all font-mono ${
-                  error
-                    ? 'border-accent/60 focus:border-accent'
-                    : 'border-border focus:border-accent/50 focus:ring-1 focus:ring-accent/30'
-                }`}
-              />
-            </div>
+        <div style={{ animation: shake ? 'shake 0.5s ease' : undefined }}>
+          <input
+            type="password"
+            autoFocus
+            required
+            value={password}
+            onChange={e => { setPassword(e.target.value); setError(null); }}
+            placeholder="Password"
+            className={`w-full bg-white/[0.04] border rounded-xl py-3 px-4 text-sm text-white placeholder:text-white/25 focus:outline-none transition-all mb-3 ${
+              error ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/10 focus:border-white/25'
+            }`}
+          />
+        </div>
+
+        {error && (
+          <div className="flex items-center gap-2 mb-3 text-[12px] text-red-400">
+            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            {error}
           </div>
+        )}
 
-          {error && (
-            <div className="flex items-center gap-2 text-accent text-[11px] mono-text uppercase tracking-widest justify-center">
-              <AlertCircle className="w-3.5 h-3.5" />
-              {error}
-            </div>
+        <button
+          onClick={handleLogin}
+          disabled={loading || !password}
+          className="w-full bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 group active:scale-[0.98] text-sm"
+        >
+          {loading ? (
+            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+          ) : (
+            <>
+              Enter
+              <ArrowRight className="w-3.5 h-3.5 text-white/40 group-hover:translate-x-0.5 group-hover:text-red-400 transition-all" />
+            </>
           )}
+        </button>
 
-          <button
-            type="submit"
-            disabled={loading || !password}
-            className="w-full bg-accent hover:opacity-90 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 group active:scale-[0.98]"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <span className="text-sm tracking-widest uppercase font-sans">Enter</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </>
-            )}
-          </button>
-        </form>
-
-        <p className="mt-10 text-center text-[10px] text-gray-700 mono-text uppercase tracking-widest">
-          Eberardos Community © 2026
+        <p className="mt-8 text-center text-[10px] text-white/15" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+          © 2026 Eberardos Community
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }
