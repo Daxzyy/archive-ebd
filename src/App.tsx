@@ -281,7 +281,7 @@ function Login() {
           </button>
         </form>
 
-        <p className="mt-8 text-center text-[10px] text-white/15" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+        <p className="mt-8 text-center text-[10px] text-white/40" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
           © 2026 Eberardos Community
         </p>
       </motion.div>
@@ -883,7 +883,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Dashboard session={session} />} />
+        <Route path="/" element={session ? <Dashboard session={session} /> : <Navigate to="/login" />} />
         <Route path="/login" element={session ? <Navigate to="/" /> : <Login />} />
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/" />} />
