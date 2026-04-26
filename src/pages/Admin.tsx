@@ -39,18 +39,15 @@ export default function Admin() {
     setSuccess(false);
 
     try {
-      const supabase = getSupabase();
-      // Validate image URL
-      try {
-        const response = await fetch(imageUrl, { method: 'HEAD' });
-        if (!response.ok) {
-          throw new Error('Image URL is not accessible or doesn\'t return 200 OK');
-        }
-      } catch (e) {
-        setError('Invalid or inaccessible image URL. Please check the CDN link.');
-        setLoading(false);
-        return;
-      }
+  new URL(imageUrl);
+  if (!imageUrl.match(/\.(jpg|jpeg|png|gif|webp|avif)(\?.*)?$/i)) {
+    throw new Error('Not an image URL');
+  }
+} catch (e) {
+  setError('Invalid image URL format. Must be a direct link to an image file.');
+  setLoading(false);
+  return;
+}
 
       const { error: dbError } = await supabase.from('archives').insert([
         {
