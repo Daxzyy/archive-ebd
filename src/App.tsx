@@ -1,43 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { getSupabase } from './lib/supabase';
+import { isAuthenticated } from './lib/auth';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Admin from './pages/Admin';
-import { Session } from '@supabase/supabase-js';
-import { AlertTriangle, Settings } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [authed, setAuthed] = useState(isAuthenticated());
   const [configError, setConfigError] = useState<string | null>(null);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     try {
-      const supabase = getSupabase();
-      
-      supabase.auth.getSession().then(({ data: { session } }) => {
-        setSession(session);
-        setLoading(false);
-      });
-
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange((_event, session) => {
-        setSession(session);
-      });
-
-      return () => subscription.unsubscribe();
+      getSupabase(); // just validate config
     } catch (e) {
       setConfigError(e instanceof Error ? e.message : 'Unknown configuration error');
-      setLoading(false);
+    } finally {
+      setChecking(false);
     }
+
+    // Listen for storage changes (e.g. logout from another tab)
+    const onStorage = () => setAuthed(isAuthenticated());
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  if (loading) {
+  // Re-check auth when navigating (after login/logout)
+  const refreshAuth = () => setAuthed(isAuthenticated());
+
+  if (checking) {
     return (
       <div className="min-h-screen bg-bg flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -52,7 +48,7 @@ export default function App() {
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-white pixel-text tracking-tighter uppercase">Configuration Required</h1>
             <p className="text-muted text-sm mono-text leading-relaxed">
-              To use the Archive System, you need to connect your Supabase project.
+              Connect your Supabase project to use the Archive System.
             </p>
           </div>
           <div className="bg-bg/50 p-4 rounded-xl border border-border text-left">
@@ -63,13 +59,8 @@ export default function App() {
             </ul>
           </div>
           <p className="text-[11px] text-gray-500 italic">
-            Add these to your project "Secrets" in the AI Studio settings sidepanel.
+            Add these to your project Secrets in AI Studio settings.
           </p>
-          <div className="pt-4 border-t border-border">
-            <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest mono-text">
-              System Core • Configuration Hub
-            </p>
-          </div>
         </div>
       </div>
     );
@@ -78,11 +69,14 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Dashboard isAuth={!!session} />} />
-        <Route path="/login" element={session ? <Navigate to="/" /> : <Login />} />
-        <Route 
-          path="/admin" 
-          element={session ? <Admin /> : <Navigate to="/login" />} 
+        <Route path="/" element={<Dashboard isAuth={authed} onAuthChange={refreshAuth} />} />
+        <Route
+          path="/login"
+          element={authed ? <Navigate to="/" /> : <Login />}
+        />
+        <Route
+          path="/admin"
+          element={authed ? <Admin /> : <Navigate to="/login" />}
         />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
