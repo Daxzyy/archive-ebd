@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient, Session } from '@supabase/supabase-js';
 import { motion, AnimatePresence } from 'motion/react';
 import {
-  AlertTriangle, Lock, LogOut, Plus, PlusCircle, Search, X, Calendar,
+  AlertTriangle, Lock, LogOut, PlusCircle, Search, X, Calendar,
   ChevronRight, Tag, User, Image as ImageIcon, FileText,
   CheckCircle, ArrowLeft, Loader2, Upload, ExternalLink, Info,
   AlertCircle, ArrowRight,
 } from 'lucide-react';
-
-// ─── lib/supabase ────────────────────────────────────────────────────────────
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -34,37 +32,9 @@ export type Archive = {
   date_unknown: boolean;
   tags: string[];
   source: string;
+  uploaded_by: string | null;
   created_at: string;
 };
-
-// ─── lib/auth ────────────────────────────────────────────────────────────────
-
-const SESSION_KEY = 'eber_access';
-
-async function checkPassword(input: string): Promise<boolean> {
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from('config')
-    .select('value')
-    .eq('key', 'access_password')
-    .single();
-  if (error || !data) return false;
-  return data.value === input;
-}
-
-function isAuthenticated(): boolean {
-  return sessionStorage.getItem(SESSION_KEY) === 'true';
-}
-
-function setAuthenticated() {
-  sessionStorage.setItem(SESSION_KEY, 'true');
-}
-
-function clearAuthenticated() {
-  sessionStorage.removeItem(SESSION_KEY);
-}
-
-// ─── lib/utils ───────────────────────────────────────────────────────────────
 
 function formatDate(dateStr: string | null, unknown: boolean): string {
   if (unknown || !dateStr) return 'Unknown';
@@ -78,8 +48,6 @@ function formatDate(dateStr: string | null, unknown: boolean): string {
     return 'Invalid Date';
   }
 }
-
-// ─── components/ArchiveModal ─────────────────────────────────────────────────
 
 function ArchiveModal({ archive, onClose }: { archive: Archive | null; onClose: () => void }) {
   if (!archive) return null;
@@ -204,9 +172,8 @@ function ArchiveModal({ archive, onClose }: { archive: Archive | null; onClose: 
   );
 }
 
-// ─── pages/Login ─────────────────────────────────────────────────────────────
-
 function Login() {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -218,14 +185,14 @@ function Login() {
     setLoading(true);
     setError(null);
     try {
-      const valid = await checkPassword(password);
-      if (valid) {
-        setAuthenticated();
-        navigate('/');
-      } else {
-        setError('Wrong password');
+      const supabase = getSupabase();
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      if (authError) {
+        setError('Email atau password salah.');
         setShake(true);
         setTimeout(() => setShake(false), 500);
+      } else {
+        navigate('/');
       }
     } catch {
       setError('Connection error. Try again.');
@@ -265,44 +232,54 @@ function Login() {
             Eberardos <span className="text-white/25 font-normal">/</span>{' '}
             <span className="text-white/45 font-medium">archive</span>
           </h1>
-          <p className="text-[12px] text-white/30">Enter password to access</p>
+          <p className="text-[12px] text-white/30">Masuk untuk mengakses arsip</p>
         </div>
 
-        <div style={{ animation: shake ? 'shake 0.5s ease' : undefined }}>
+        <form onSubmit={handleLogin} style={{ animation: shake ? 'shake 0.5s ease' : undefined }} className="flex flex-col gap-3">
+          <input
+            type="email"
+            autoFocus
+            required
+            value={email}
+            onChange={e => { setEmail(e.target.value); setError(null); }}
+            placeholder="Email"
+            className={`w-full bg-white/[0.04] border rounded-xl py-3 px-4 text-sm text-white placeholder:text-white/25 focus:outline-none transition-all ${
+              error ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/10 focus:border-white/25'
+            }`}
+          />
           <input
             type="password"
-            autoFocus
             required
             value={password}
             onChange={e => { setPassword(e.target.value); setError(null); }}
             placeholder="Password"
-            className={`w-full bg-white/[0.04] border rounded-xl py-3 px-4 text-sm text-white placeholder:text-white/25 focus:outline-none transition-all mb-3 ${
+            className={`w-full bg-white/[0.04] border rounded-xl py-3 px-4 text-sm text-white placeholder:text-white/25 focus:outline-none transition-all ${
               error ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/10 focus:border-white/25'
             }`}
           />
-        </div>
 
-        {error && (
-          <div className="flex items-center gap-2 mb-3 text-[12px] text-red-400">
-            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-            {error}
-          </div>
-        )}
-
-        <button
-          onClick={handleLogin}
-          disabled={loading || !password}
-          className="w-full bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 group active:scale-[0.98] text-sm"
-        >
-          {loading ? (
-            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-          ) : (
-            <>
-              Enter
-              <ArrowRight className="w-3.5 h-3.5 text-white/40 group-hover:translate-x-0.5 group-hover:text-red-400 transition-all" />
-            </>
+          {error && (
+            <div className="flex items-center gap-2 text-[12px] text-red-400">
+              <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+              {error}
+            </div>
           )}
-        </button>
+
+          <button
+            type="submit"
+            disabled={loading || !email || !password}
+            className="w-full bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 hover:border-white/20 disabled:opacity-30 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-xl transition-all flex items-center justify-center gap-2 group active:scale-[0.98] text-sm mt-1"
+          >
+            {loading ? (
+              <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            ) : (
+              <>
+                Masuk
+                <ArrowRight className="w-3.5 h-3.5 text-white/40 group-hover:translate-x-0.5 group-hover:text-red-400 transition-all" />
+              </>
+            )}
+          </button>
+        </form>
 
         <p className="mt-8 text-center text-[10px] text-white/15" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
           © 2026 Eberardos Community
@@ -312,9 +289,7 @@ function Login() {
   );
 }
 
-// ─── pages/Admin ─────────────────────────────────────────────────────────────
-
-function Admin() {
+function Admin({ session }: { session: Session }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -350,6 +325,7 @@ function Admin() {
         date_unknown: dateUnknown,
         tags: tags.split(',').map(t => t.trim()).filter(t => t !== ''),
         source,
+        uploaded_by: session.user.id,
       }]);
 
       if (dbError) {
@@ -367,8 +343,8 @@ function Admin() {
     }
   };
 
-  const handleLogout = () => {
-    clearAuthenticated();
+  const handleLogout = async () => {
+    await getSupabase().auth.signOut();
     navigate('/login');
   };
 
@@ -387,12 +363,15 @@ function Admin() {
             <span className="text-white/20 mx-1.5 font-light">/</span>
             <span className="text-white/40 font-medium">new archive</span>
           </span>
-          <button
-            onClick={handleLogout}
-            className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-white/25 hover:text-white"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] text-white/20 mono-text hidden sm:block">{session.user.email}</span>
+            <button
+              onClick={handleLogout}
+              className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-white/25 hover:text-white"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -411,7 +390,6 @@ function Admin() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          {/* Image URL */}
           <div className="border border-white/[0.07] bg-white/[0.02] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <ImageIcon className="w-3.5 h-3.5 text-red-400" />
@@ -442,7 +420,6 @@ function Admin() {
             </div>
           </div>
 
-          {/* Date */}
           <div className="border border-white/[0.07] bg-white/[0.02] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <Calendar className="w-3.5 h-3.5 text-red-400" />
@@ -469,7 +446,6 @@ function Admin() {
             </div>
           </div>
 
-          {/* Details */}
           <div className="border border-white/[0.07] bg-white/[0.02] rounded-xl p-5">
             <div className="flex items-center gap-2 mb-4">
               <FileText className="w-3.5 h-3.5 text-red-400" />
@@ -574,8 +550,6 @@ function Admin() {
   );
 }
 
-// ─── pages/Dashboard ─────────────────────────────────────────────────────────
-
 function ArchiveCard({ archive, onClick }: { archive: Archive; onClick: () => void }) {
   const [loaded, setLoaded] = useState(false);
 
@@ -621,7 +595,7 @@ function ArchiveCard({ archive, onClick }: { archive: Archive; onClick: () => vo
   );
 }
 
-function Dashboard({ isAuth, onAuthChange }: { isAuth: boolean; onAuthChange?: () => void }) {
+function Dashboard({ session }: { session: Session | null }) {
   const navigate = useNavigate();
   const [archives, setArchives] = useState<Archive[]>([]);
   const [loading, setLoading] = useState(true);
@@ -659,9 +633,8 @@ function Dashboard({ isAuth, onAuthChange }: { isAuth: boolean; onAuthChange?: (
     }
   };
 
-  const handleLogout = () => {
-    clearAuthenticated();
-    onAuthChange?.();
+  const handleLogout = async () => {
+    await getSupabase().auth.signOut();
     navigate('/login');
   };
 
@@ -688,7 +661,7 @@ function Dashboard({ isAuth, onAuthChange }: { isAuth: boolean; onAuthChange?: (
             <span className="text-white/40 font-medium">archive</span>
           </span>
           <div className="flex items-center gap-2">
-            {isAuth ? (
+            {session ? (
               <>
                 <button
                   onClick={() => navigate('/admin')}
@@ -716,7 +689,6 @@ function Dashboard({ isAuth, onAuthChange }: { isAuth: boolean; onAuthChange?: (
       </nav>
 
       <div className="max-w-6xl mx-auto px-4 py-6 flex gap-7">
-        {/* Sidebar */}
         <aside className="hidden md:flex flex-col gap-5 w-44 flex-shrink-0 pt-1">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/20" />
@@ -774,7 +746,6 @@ function Dashboard({ isAuth, onAuthChange }: { isAuth: boolean; onAuthChange?: (
           )}
         </aside>
 
-        {/* Main */}
         <main className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
@@ -854,33 +825,32 @@ function Dashboard({ isAuth, onAuthChange }: { isAuth: boolean; onAuthChange?: (
   );
 }
 
-// ─── App (root) ───────────────────────────────────────────────────────────────
-
 export default function App() {
-  const [authed, setAuthed] = useState(isAuthenticated());
+  const [session, setSession] = useState<Session | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     try {
-      getSupabase();
+      const supabase = getSupabase();
+      supabase.auth.getSession().then(({ data }) => {
+        setSession(data.session);
+        setChecking(false);
+      });
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setSession(session);
+      });
+      return () => subscription.unsubscribe();
     } catch (e) {
       setConfigError(e instanceof Error ? e.message : 'Unknown configuration error');
-    } finally {
       setChecking(false);
     }
-
-    const onStorage = () => setAuthed(isAuthenticated());
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
   }, []);
-
-  const refreshAuth = () => setAuthed(isAuthenticated());
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-bg flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#131313] flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-white/10 border-t-white/40 rounded-full animate-spin" />
       </div>
     );
   }
@@ -905,9 +875,6 @@ export default function App() {
               <li>VITE_SUPABASE_ANON_KEY</li>
             </ul>
           </div>
-          <p className="text-[11px] text-gray-500 italic">
-            Add these to your project Secrets in AI Studio settings.
-          </p>
         </div>
       </div>
     );
@@ -916,9 +883,9 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Dashboard isAuth={authed} onAuthChange={refreshAuth} />} />
-        <Route path="/login" element={authed ? <Navigate to="/" /> : <Login />} />
-        <Route path="/admin" element={authed ? <Admin /> : <Navigate to="/login" />} />
+        <Route path="/" element={<Dashboard session={session} />} />
+        <Route path="/login" element={session ? <Navigate to="/" /> : <Login />} />
+        <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
