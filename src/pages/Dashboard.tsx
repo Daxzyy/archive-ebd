@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Filter, Calendar as CalendarIcon, Tag, SlidersHorizontal, ChevronLeft, ChevronRight, PlusCircle } from 'lucide-react';
+import { Search, SlidersHorizontal, PlusCircle } from 'lucide-react';
 import { getSupabase, Archive } from '../lib/supabase';
 import Navbar from '../components/Navbar';
 import ArchiveCard from '../components/ArchiveCard';
@@ -9,9 +9,10 @@ import { motion, AnimatePresence } from 'motion/react';
 
 interface DashboardProps {
   isAuth: boolean;
+  onAuthChange?: () => void;
 }
 
-export default function Dashboard({ isAuth }: DashboardProps) {
+export default function Dashboard({ isAuth, onAuthChange }: DashboardProps) {
   const navigate = useNavigate();
   const [archives, setArchives] = useState<Archive[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +39,6 @@ export default function Dashboard({ isAuth }: DashboardProps) {
       if (error) throw error;
       setArchives(data || []);
 
-      // Extract unique tags and years
       const tags = new Set<string>();
       const years = new Set<string>();
       data?.forEach(a => {
@@ -55,35 +55,37 @@ export default function Dashboard({ isAuth }: DashboardProps) {
   };
 
   const filteredArchives = archives.filter(a => {
-    const matchesSearch = 
+    const matchesSearch =
       a.description?.toLowerCase().includes(search.toLowerCase()) ||
       a.tags?.some(t => t.toLowerCase().includes(search.toLowerCase())) ||
       a.source?.toLowerCase().includes(search.toLowerCase());
-    
+
     const matchesTag = selectedTag === 'All' || a.tags?.includes(selectedTag);
-    const matchesYear = selectedYear === 'All' || (a.date && new Date(a.date).getFullYear().toString() === selectedYear);
+    const matchesYear =
+      selectedYear === 'All' ||
+      (a.date && new Date(a.date).getFullYear().toString() === selectedYear);
 
     return matchesSearch && matchesTag && matchesYear;
   });
 
   return (
     <div className="flex flex-col h-screen bg-bg overflow-hidden">
-      <Navbar isAuth={isAuth} />
+      <Navbar isAuth={isAuth} onAuthChange={onAuthChange} />
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <aside className="w-60 border-r border-border p-6 flex-shrink-0 flex flex-col gap-8 hidden md:flex">
+        <aside className="w-60 border-r border-border p-6 flex-shrink-0 flex-col gap-8 hidden md:flex">
           <div>
             <div className="text-[11px] uppercase tracking-[0.15em] text-muted mb-4 mono-text font-bold">Navigation</div>
             <nav className="space-y-1">
               <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-border text-accent transition-colors">
                 <SlidersHorizontal className="w-4 h-4" /> Dashboard
               </button>
-              <button 
+              <button
                 onClick={() => isAuth ? navigate('/admin') : navigate('/login')}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted hover:bg-border transition-colors text-left"
               >
-                <PlusCircle className="w-4 h-4" /> {isAuth ? 'Add Archive' : 'Admin Login'}
+                <PlusCircle className="w-4 h-4" /> {isAuth ? 'Add Archive' : 'Access Archive'}
               </button>
             </nav>
           </div>
@@ -126,7 +128,7 @@ export default function Dashboard({ isAuth }: DashboardProps) {
         <main className="flex-1 p-6 flex flex-col gap-6 overflow-hidden">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-xl font-bold tracking-tight">Recent Archives</h2>
-            
+
             <div className="flex items-center gap-3">
               <div className="relative w-full sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" />
@@ -154,7 +156,7 @@ export default function Dashboard({ isAuth }: DashboardProps) {
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-card rounded-2xl h-60 animate-pulse border border-border"></div>
+                  <div key={i} className="bg-card rounded-2xl h-60 animate-pulse border border-border" />
                 ))}
               </div>
             ) : filteredArchives.length > 0 ? (
@@ -182,13 +184,11 @@ export default function Dashboard({ isAuth }: DashboardProps) {
         </main>
       </div>
 
-      {/* Mini Footer */}
-      <footer className="h-8 border-top border-border flex items-center justify-between px-6 text-[10px] font-mono text-muted flex-shrink-0">
-        <div>&copy; 2024 Archive Eberardos Community</div>
-        <div className="flex gap-4">
-          <span>DATABASE: SUPABASE CLOUD</span>
-          <span className="hidden sm:inline">NEXTJS V14.2 ENGINE</span>
-        </div>
+      {/* Footer */}
+      <footer className="h-8 border-t border-border flex items-center justify-center px-6 flex-shrink-0">
+        <p className="text-[10px] mono-text text-gray-700 uppercase tracking-widest">
+          © 2026 Eberardos Community Archive
+        </p>
       </footer>
 
       <ArchiveModal
