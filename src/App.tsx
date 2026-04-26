@@ -109,10 +109,6 @@ function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null;
 
             <div className="space-y-8">
               <div className="space-y-4">
-                <div className="flex items-center gap-2 text-accent">
-                  <Info className="w-4 h-4" />
-                  <span className="text-[10px] uppercase font-bold tracking-[0.2em] mono-text">Metadata</span>
-                </div>
                 <h2 className="text-2xl font-bold text-white leading-snug">
                   {archive.description || 'No description provided for this archive.'}
                 </h2>
@@ -169,15 +165,6 @@ function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null;
                       )}
                     </div>
                   </div>
-                </div>
-              </div>
-
-              <div className="pt-8 border-t border-border mt-8">
-                <div className="bg-accent-soft p-4 rounded-2xl border border-accent/10">
-                  <p className="text-[10px] text-accent font-bold uppercase tracking-widest mb-1 mono-text">System ID</p>
-                  <p className="text-[10px] text-muted mono-text break-all opacity-60">
-                    {archive.id}
-                  </p>
                 </div>
               </div>
             </div>
@@ -381,11 +368,11 @@ function Admin({ session }: { session: Session }) {
     >
       <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#131313]/90 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between" style={{ height: 52 }}>
-          <span className="text-sm font-bold text-white/90 tracking-tight">
-            Eberardos
-            <span className="text-white/20 mx-1.5 font-light">/</span>
-            <span className="text-white/40 font-medium">new archive</span>
-          </span>
+<h1 className="text-sm font-bold text-white/90 tracking-tight pixel-text">
+  Eberardos
+  <span className="text-white/20 mx-1.5 font-light">/</span>
+  <span className="text-white/40 font-medium">new archive</span>
+</h1>
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-white/20 mono-text hidden sm:block">{session.user.email}</span>
             <button
@@ -566,7 +553,7 @@ function Admin({ session }: { session: Session }) {
 
       <footer className="border-t border-white/[0.05] py-5 mt-8">
         <div className="max-w-6xl mx-auto px-4">
-          <p className="text-[11px] text-white/20">© 2026 Eberardos Community</p>
+          <p className="text-[11px] text-white/20 text-center">© 2026 Eberardos Community</p>
         </div>
       </footer>
     </div>
@@ -679,13 +666,14 @@ function Dashboard({ session }: { session: Session | null }) {
 
   return (
     <div className="min-h-screen bg-[#131313] text-neutral-200" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
+  <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-[100px] pointer-events-none" />
       <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#131313]/90 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 h-13 flex items-center justify-between" style={{ height: 52 }}>
-          <span className="text-sm font-bold text-white/90 tracking-tight">
-            Eberardos
-            <span className="text-white/20 mx-1.5 font-light">/</span>
-            <span className="text-white/40 font-medium">archive</span>
-          </span>
+<h1 className="text-sm font-bold text-white/90 tracking-tight pixel-text">
+  Eberardos
+  <span className="text-white/20 mx-1.5 font-light">/</span>
+  <span className="text-white/40 font-medium">archive</span>
+</h1>
           <div className="flex items-center gap-2">
             {session ? (
               <>
@@ -842,7 +830,7 @@ function Dashboard({ session }: { session: Session | null }) {
 
       <footer className="border-t border-white/[0.05] py-5 mt-4">
         <div className="max-w-6xl mx-auto px-4">
-          <p className="text-[11px] text-white/20">© 2026 Eberardos Community</p>
+          <p className="text-[11px] text-white/20 text-center">© 2026 Eberardos Community</p>
         </div>
       </footer>
 
