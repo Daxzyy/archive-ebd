@@ -8,6 +8,7 @@ import {
   CheckCircle, ArrowLeft, Loader2, Upload, ExternalLink, Info,
   AlertCircle, ArrowRight, Archive, Hash,
 } from 'lucide-react';
+import ImageUpload from './ImageUpload';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -404,14 +405,8 @@ const [initialAvatar, setInitialAvatar] = useState('');
                   />
                 </div>
                 <div>
-                  <label className={labelClass}>Avatar URL</label>
-                  <input
-                    type="url"
-                    placeholder="https://example.com/foto.jpg"
-                    value={avatarUrl}
-                    onChange={e => setAvatarUrl(e.target.value)}
-                    className={inputClass}
-                  />
+                  <label className={labelClass}>Avatar</label>
+                  <ImageUpload value={avatarUrl} onChange={setAvatarUrl} circle />
                 </div>
               </div>
 
@@ -752,27 +747,7 @@ function Admin({ session }: { session: Session }) {
               <span className="text-[11px] font-bold text-white/40 uppercase tracking-widest">Media</span>
             </div>
             <div className="flex flex-col gap-4">
-              <div>
-                <label className={labelClass}>Image URL</label>
-                <input
-                  type="url"
-                  required
-                  placeholder="https://cdn.example.com/image.jpg"
-                  value={imageUrl}
-                  onChange={e => setImageUrl(e.target.value)}
-                  className={inputClass}
-                />
-              </div>
-              {imageUrl && (
-                <div className="rounded-lg overflow-hidden border border-white/[0.07] bg-black aspect-video">
-                  <img
-                    src={imageUrl}
-                    alt="Preview"
-                    className="w-full h-full object-contain"
-                    onError={() => setError('Image failed to load')}
-                  />
-                </div>
-              )}
+              <ImageUpload value={imageUrl} onChange={setImageUrl} />
             </div>
           </div>
 
