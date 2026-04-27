@@ -204,19 +204,23 @@ function Sidebar({ session, profiles, onClose, onNavigate, onLogout }: {
           </button>
         </nav>
         <div className="border-t border-white/[0.06] px-3 py-4 flex flex-col gap-1">
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-1">
-            <div className="w-8 h-8 rounded-full bg-red-400/20 border border-red-400/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
+          <button
+            onClick={() => { onNavigate('/profile'); onClose(); }}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left group hover:bg-white/[0.06]"
+          >
+            <div className="w-7 h-7 rounded-full bg-red-400/20 border border-red-400/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
               {avatarUrl ? (
                 <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-[12px] font-bold text-red-400 uppercase">{displayName[0]}</span>
+                <span className="text-[11px] font-bold text-red-400 uppercase">{displayName[0]}</span>
               )}
             </div>
-            <div className="min-w-0">
-              <p className="text-[12px] font-semibold text-white/80 truncate">{displayName}</p>
-              <p className="text-[10px] text-white/25 truncate">{session.user.email}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-semibold text-white/80 truncate group-hover:text-white transition-colors">{displayName}</p>
+              <p className="text-[9px] text-white/25 truncate">Lihat profil</p>
             </div>
-          </div>
+            <ChevronRight className="w-3 h-3 text-white/15 group-hover:text-white/40 transition-colors flex-shrink-0" />
+          </button>
           <button
             onClick={() => { onLogout(); onClose(); }}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/30 hover:text-red-400 hover:bg-red-400/5 transition-all text-[13px] font-medium group"
@@ -226,6 +230,202 @@ function Sidebar({ session, profiles, onClose, onNavigate, onLogout }: {
           </button>
         </div>
       </motion.div>
+    </div>
+  );
+}
+
+function ProfilePage({ session }: { session: Session }) {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [joinedAt, setJoinedAt] = useState('');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const supabase = getSupabase();
+        const { data } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        if (data) {
+          setDisplayName(data.display_name || '');
+          setAvatarUrl(data.avatar_url || '');
+        }
+        setJoinedAt(new Date(session.user.created_at).toLocaleDateString('id-ID', {
+          year: 'numeric', month: 'long', day: 'numeric',
+        }));
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [session]);
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setError(null);
+    setSuccess(false);
+    try {
+      const supabase = getSupabase();
+      const { error: dbError } = await supabase
+        .from('profiles')
+        .update({ display_name: displayName, avatar_url: avatarUrl || null })
+        .eq('id', session.user.id);
+      if (dbError) throw dbError;
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Gagal menyimpan');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputClass = "w-full bg-white/[0.03] border border-white/[0.08] rounded-lg py-2.5 px-3.5 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-white/25 focus:bg-white/[0.05] transition-all";
+  const labelClass = "block text-[10px] font-bold text-white/25 uppercase tracking-widest mb-1.5";
+
+  return (
+    <div className="min-h-screen bg-[#131313] text-neutral-200" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
+      <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#131313]/90 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between" style={{ height: 52 }}>
+          <h1 className="text-sm font-bold text-white/90 tracking-tight pixel-text">
+            Eberardos
+            <span className="text-white/20 mx-1.5 font-light">/</span>
+            <span className="text-white/40 font-medium">profile</span>
+          </h1>
+        </div>
+      </nav>
+
+      <div className="max-w-lg mx-auto px-4 py-8">
+        <button
+          onClick={() => navigate('/')}
+          className="inline-flex items-center gap-1.5 text-white/25 hover:text-white transition-colors mb-6 text-[11px] font-bold uppercase tracking-wider group"
+        >
+          <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+          Back
+        </button>
+
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="w-5 h-5 border-2 border-white/10 border-t-white/40 rounded-full animate-spin" />
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-16 h-16 rounded-full bg-red-400/20 border-2 border-red-400/30 flex items-center justify-center overflow-hidden flex-shrink-0">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" onError={() => setAvatarUrl('')} />
+                ) : (
+                  <span className="text-2xl font-bold text-red-400 uppercase">{displayName?.[0] || '?'}</span>
+                )}
+              </div>
+              <div>
+                <p className="text-white/80 font-semibold text-base">{displayName || 'No name set'}</p>
+                <p className="text-white/30 text-[12px]">{session.user.email}</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSave} className="flex flex-col gap-5">
+              <div className="border border-white/[0.07] bg-white/[0.02] rounded-xl p-5 flex flex-col gap-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <User className="w-3.5 h-3.5 text-red-400" />
+                  <span className="text-[11px] font-bold text-white/40 uppercase tracking-widest">Edit Profil</span>
+                </div>
+                <div>
+                  <label className={labelClass}>Display Name</label>
+                  <input
+                    type="text"
+                    placeholder="nama kamu"
+                    value={displayName}
+                    onChange={e => setDisplayName(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Avatar URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://example.com/foto.jpg"
+                    value={avatarUrl}
+                    onChange={e => setAvatarUrl(e.target.value)}
+                    className={inputClass}
+                  />
+                  {avatarUrl && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <img
+                        src={avatarUrl}
+                        alt="preview"
+                        onError={() => setError('URL gambar tidak valid')}
+                        className="w-8 h-8 rounded-full object-cover border border-white/10"
+                      />
+                      <span className="text-[10px] text-white/25">preview</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="border border-white/[0.07] bg-white/[0.02] rounded-xl p-5 flex flex-col gap-3">
+                <div className="flex items-center gap-2 mb-1">
+                  <Info className="w-3.5 h-3.5 text-red-400" />
+                  <span className="text-[11px] font-bold text-white/40 uppercase tracking-widest">Info Akun</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between py-2 border-b border-white/[0.05]">
+                    <span className="text-[11px] text-white/30 uppercase tracking-widest font-bold">Email</span>
+                    <span className="text-[12px] text-white/60">{session.user.email}</span>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <span className="text-[11px] text-white/30 uppercase tracking-widest font-bold">Bergabung</span>
+                    <span className="text-[12px] text-white/60">{joinedAt}</span>
+                  </div>
+                </div>
+              </div>
+
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-2.5 p-3.5 border border-red-500/20 bg-red-500/5 rounded-xl text-red-400 text-[12px]"
+                >
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  {error}
+                </motion.div>
+              )}
+              {success && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-2.5 p-3.5 border border-green-500/20 bg-green-500/5 rounded-xl text-green-400 text-[12px]"
+                >
+                  <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                  Profil berhasil disimpan!
+                </motion.div>
+              )}
+
+              <button
+                type="submit"
+                disabled={saving}
+                className="w-full flex items-center justify-center gap-2 py-3 bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 hover:border-white/20 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all active:scale-[0.99] text-sm"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin opacity-60" /> : 'Simpan Perubahan'}
+              </button>
+            </form>
+          </>
+        )}
+      </div>
+
+      <footer className="border-t border-white/[0.05] py-5 mt-8">
+        <div className="max-w-6xl mx-auto px-4">
+          <p className="text-[11px] text-white/20 text-center">© 2026 Eberardos Community</p>
+        </div>
+      </footer>
     </div>
   );
 }
@@ -969,6 +1169,7 @@ export default function App() {
         <Route path="/" element={session ? <Dashboard session={session} /> : <Navigate to="/login" />} />
         <Route path="/login" element={session ? <Navigate to="/" /> : <Login />} />
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
+        <Route path="/profile" element={session ? <ProfilePage session={session} /> : <Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
