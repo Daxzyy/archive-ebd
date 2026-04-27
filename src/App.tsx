@@ -383,8 +383,9 @@ const [initialBio, setInitialBio] = useState('');
                     <span className="text-3xl font-bold text-red-400 uppercase">{displayName?.[0] || '?'}</span>
                   )}
                 </div>
-                <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/50 transition-all flex flex-col items-center justify-center gap-1">
                   <Upload className="w-5 h-5 text-white/0 group-hover:text-white/80 transition-all" />
+                  <span className="text-[9px] font-bold text-white/0 group-hover:text-white/60 transition-all uppercase tracking-widest">Ganti foto</span>
                 </div>
                 <input id="avatar-input" type="file" accept="image/*" className="hidden" onChange={async e => {
                   const file = e.target.files?.[0];
@@ -427,7 +428,7 @@ const [initialBio, setInitialBio] = useState('');
                   <label className={labelClass}>Bio</label>
                   <textarea
                     rows={2}
-                    placeholder="cerita dikit tentang kamu..."
+                    placeholder="isi bio lu disini..."
                     value={bio}
                     onChange={e => setBio(e.target.value)}
                     className={`${inputClass} resize-none`}
