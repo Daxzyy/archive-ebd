@@ -393,7 +393,7 @@ const [initialBio, setInitialBio] = useState('');
                   const form = new FormData();
                   form.append('file', file);
                   try {
-                    const res = await fetch('https://upf.iyayn.web.id/uploadfile', { method: 'POST', body: form });
+                    const res = await fetch('https://uploadgh.zone.id/uploadfile', { method: 'POST', body: form });
                     const html = await res.text();
                     const doc = new DOMParser().parseFromString(html, 'text/html');
                     const url = doc.querySelector('#rawUrlLink')?.getAttribute('href');
