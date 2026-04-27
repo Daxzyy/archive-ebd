@@ -277,6 +277,8 @@ function ProfilePage({ session }: { session: Session }) {
   const [joinedAt, setJoinedAt] = useState('');
   const [profiles, setProfiles] = useState<Profile[]>([]);
 const [sidebarOpen, setSidebarOpen] = useState(false);
+const [initialName, setInitialName] = useState('');
+const [initialAvatar, setInitialAvatar] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -290,6 +292,8 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
         if (data) {
           setDisplayName(data.display_name || '');
           setAvatarUrl(data.avatar_url || '');
+          setInitialName(data.display_name || '');
+          setInitialAvatar(data.avatar_url || '');
         }
         setJoinedAt(new Date(session.user.created_at).toLocaleDateString('id-ID', {
           year: 'numeric', month: 'long', day: 'numeric',
@@ -305,6 +309,7 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (displayName === initialName && avatarUrl === initialAvatar) return;
     setSaving(true);
     setError(null);
     setSuccess(false);
@@ -315,6 +320,8 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
         .upsert({ id: session.user.id, display_name: displayName, avatar_url: avatarUrl || null });
       if (dbError) throw dbError;
       setSuccess(true);
+      setInitialName(displayName);
+      setInitialAvatar(avatarUrl);
       setTimeout(() => setSuccess(false), 3000);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Gagal menyimpan');
@@ -448,7 +455,7 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
 
               <button
                 type="submit"
-                disabled={saving}
+                disabled={saving || (displayName === initialName && avatarUrl === initialAvatar)}
                 className="w-full flex items-center justify-center gap-2 py-3 bg-white/[0.06] hover:bg-white/[0.10] border border-white/10 hover:border-white/20 disabled:opacity-40 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all active:scale-[0.99] text-sm"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin opacity-60" /> : 'Simpan Perubahan'}
