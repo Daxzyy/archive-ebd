@@ -459,9 +459,35 @@ function Login() {
     setError(null);
     try {
       const supabase = getSupabase();
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+
+      let loginEmail = email;
+
+      // Kalau input bukan email (ga ada @), lookup dulu ke tabel profiles
+      if (!email.includes('@')) {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('display_name', email)
+          .single();
+
+        if (profileError || !profileData?.email) {
+          setError('Username tidak ditemukan.');
+          setShake(true);
+          setTimeout(() => setShake(false), 500);
+          setLoading(false);
+          return;
+        }
+
+        loginEmail = profileData.email;
+      }
+
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password,
+      });
+
       if (authError) {
-        setError('Email atau password salah.');
+        setError('Email/username atau password salah.');
         setShake(true);
         setTimeout(() => setShake(false), 500);
       } else {
