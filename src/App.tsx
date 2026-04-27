@@ -185,8 +185,7 @@ function Sidebar({ session, profiles, onClose, onNavigate, onLogout }: {
         transition={{ type: 'spring', damping: 28, stiffness: 300 }}
         className="relative w-64 h-full bg-[#161616] border-l border-white/[0.08] flex flex-col shadow-2xl"
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-          <span className="text-[11px] font-bold text-white/30 uppercase tracking-widest">Menu</span>
+        <div className="flex items-center justify-end px-4 py-3 border-b border-white/[0.06]">
           <button
             onClick={onClose}
             className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/[0.05] hover:bg-white/10 text-white/30 hover:text-white transition-all"
@@ -196,7 +195,7 @@ function Sidebar({ session, profiles, onClose, onNavigate, onLogout }: {
         </div>
         <nav className="flex-1 px-3 py-4 flex flex-col gap-4">
           <div>
-            <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-1 px-3">Dashboard</p>
+            <p className="text-[13px] font-semibold text-white/60 mb-1 px-3">Dashboard</p>
             <button
               onClick={() => { onNavigate('/admin'); onClose(); }}
               className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-[13px] font-medium text-left group"
@@ -209,7 +208,7 @@ function Sidebar({ session, profiles, onClose, onNavigate, onLogout }: {
             </button>
           </div>
           <div>
-            <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-1 px-3">Account</p>
+            <p className="text-[13px] font-semibold text-white/60 mb-1 px-3">Account</p>
             <div className="flex items-center gap-3 px-3 py-2.5 mb-1">
               <div className="w-8 h-8 rounded-full bg-red-400/20 border border-red-400/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {avatarUrl ? (
