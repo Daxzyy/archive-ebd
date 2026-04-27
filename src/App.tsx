@@ -158,7 +158,77 @@ function MetaCell({ icon, label, value }: { icon: React.ReactNode; label: string
     </div>
   );
 }
-// ─────────────────────────────────────────────────────────────────────────────
+function Sidebar({ session, profiles, onClose, onNavigate, onLogout }: {
+  session: Session;
+  profiles: Profile[];
+  onClose: () => void;
+  onNavigate: (path: string) => void;
+  onLogout: () => void;
+}) {
+  const profile = profiles.find(p => p.id === session.user.id);
+  const displayName = profile?.display_name || session.user.email?.split('@')[0] || 'Admin';
+  const avatarUrl = profile?.avatar_url;
+
+  return (
+    <div className="fixed inset-0 z-[70] flex justify-end">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+      />
+      <motion.div
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+        className="relative w-64 h-full bg-[#161616] border-l border-white/[0.08] flex flex-col shadow-2xl"
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
+          <span className="text-[11px] font-bold text-white/30 uppercase tracking-widest">Menu</span>
+          <button
+            onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/[0.05] hover:bg-white/10 text-white/30 hover:text-white transition-all"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
+          <button
+            onClick={() => { onNavigate('/admin'); onClose(); }}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-[13px] font-medium text-left group"
+          >
+            <PlusCircle className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
+            New Archive
+          </button>
+        </nav>
+        <div className="border-t border-white/[0.06] px-3 py-4 flex flex-col gap-1">
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-1">
+            <div className="w-8 h-8 rounded-full bg-red-400/20 border border-red-400/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[12px] font-bold text-red-400 uppercase">{displayName[0]}</span>
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-[12px] font-semibold text-white/80 truncate">{displayName}</p>
+              <p className="text-[10px] text-white/25 truncate">{session.user.email}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => { onLogout(); onClose(); }}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/30 hover:text-red-400 hover:bg-red-400/5 transition-all text-[13px] font-medium group"
+          >
+            <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
+            Logout
+          </button>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -601,6 +671,7 @@ function Dashboard({ session }: { session: Session | null }) {
   const [selectedArchive, setSelectedArchive] = useState<Archive | null>(null);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [allYears, setAllYears] = useState<string[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => { fetchArchives(); }, []);
 
@@ -661,27 +732,21 @@ function Dashboard({ session }: { session: Session | null }) {
             <span className="text-white/40 font-medium">archive</span>
           </h1>
           <div className="flex items-center gap-2">
-            {session ? (
-              <>
-                <button
-                  onClick={() => navigate('/admin')}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] hover:border-white/20 transition-all text-[11px] font-bold text-white/40 hover:text-white tracking-wider"
-                >
-                  <PlusCircle className="w-3 h-3" /> New
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-white/25 hover:text-white"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                </button>
-              </>
-            ) : (
+            {!session ? (
               <button
                 onClick={() => navigate('/login')}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-[11px] font-bold text-white/35 hover:text-white tracking-wider"
               >
                 <Lock className="w-3 h-3" /> Access
+              </button>
+            ) : (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-white/40 hover:text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
+                  <path d="M120-240v-80h480v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/>
+                </svg>
               </button>
             )}
           </div>
@@ -828,6 +893,17 @@ function Dashboard({ session }: { session: Session | null }) {
       </footer>
 
       <ArchiveModal archive={selectedArchive} onClose={() => setSelectedArchive(null)} profiles={profiles} />
+      <AnimatePresence>
+        {session && sidebarOpen && (
+          <Sidebar
+            session={session}
+            profiles={profiles}
+            onClose={() => setSidebarOpen(false)}
+            onNavigate={navigate}
+            onLogout={handleLogout}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
