@@ -5,7 +5,7 @@ async function uploadFile(file: File): Promise<string> {
   const form = new FormData();
   form.append('file', file);
 
-  const res = await fetch('https://upf.iyayn.web.id/uploadfile', {
+  const res = await fetch('https://uploadgh.zone.id/uploadfile', {
     method: 'POST',
     body: form,
   });
