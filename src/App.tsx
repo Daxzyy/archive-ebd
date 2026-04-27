@@ -194,43 +194,58 @@ function Sidebar({ session, profiles, onClose, onNavigate, onLogout }: {
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
-        <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
-          <button
-            onClick={() => { onNavigate('/admin'); onClose(); }}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-[13px] font-medium text-left group"
-          >
-            <PlusCircle className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
-            New Archive
-          </button>
+        <nav className="flex-1 px-3 py-4 flex flex-col gap-4">
+          <div>
+            <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-1 px-3">Dashboard</p>
+            <button
+              onClick={() => { onNavigate('/admin'); onClose(); }}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-[13px] font-medium text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <PlusCircle className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
+                New Archive
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-white/15 group-hover:text-white/40 transition-colors" />
+            </button>
+          </div>
+          <div>
+            <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-1 px-3">Account</p>
+            <button
+              onClick={() => { onNavigate('/profile'); onClose(); }}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-[13px] font-medium text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <User className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
+                Profil
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-white/15 group-hover:text-white/40 transition-colors" />
+            </button>
+            <button
+              onClick={() => { onLogout(); onClose(); }}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/30 hover:text-red-400 hover:bg-red-400/5 transition-all text-[13px] font-medium text-left group"
+            >
+              <div className="flex items-center gap-3">
+                <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                Logout
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-white/15 group-hover:text-red-400/40 transition-colors" />
+            </button>
+          </div>
         </nav>
-        <div className="border-t border-white/[0.06] px-3 py-4 flex flex-col gap-1">
-          <div className="flex items-center gap-3 px-3 py-2.5 mb-1">
-            <div className="w-9 h-9 rounded-full bg-red-400/20 border border-red-400/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <div className="border-t border-white/[0.06] px-4 py-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-red-400/20 border border-red-400/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
               {avatarUrl ? (
                 <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
               ) : (
-                <span className="text-[13px] font-bold text-red-400 uppercase">{displayName[0]}</span>
+                <span className="text-[12px] font-bold text-red-400 uppercase">{displayName[0]}</span>
               )}
             </div>
             <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-white/80 truncate">{displayName}</p>
+              <p className="text-[12px] font-semibold text-white/70 truncate">{displayName}</p>
               <p className="text-[10px] text-white/25 truncate">{session.user.email}</p>
             </div>
           </div>
-          <button
-            onClick={() => { onNavigate('/profile'); onClose(); }}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-[13px] font-medium text-left group"
-          >
-            <User className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
-            Profil
-          </button>
-          <button
-            onClick={() => { onLogout(); onClose(); }}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/30 hover:text-red-400 hover:bg-red-400/5 transition-all text-[13px] font-medium group"
-          >
-            <LogOut className="w-4 h-4 group-hover:scale-110 transition-transform" />
-            Logout
-          </button>
         </div>
       </motion.div>
     </div>
