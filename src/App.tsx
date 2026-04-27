@@ -536,12 +536,15 @@ function Login() {
 
         <form onSubmit={handleLogin} style={{ animation: shake ? 'shake 0.5s ease' : undefined }} className="flex flex-col gap-3">
           <input
-            type="email"
-            autoFocus
-            required
-            value={email}
-            onChange={e => { setEmail(e.target.value); setError(null); }}
-            placeholder="Email"
+            type="text"
+autoFocus
+required
+value={email}
+onChange={e => { setEmail(e.target.value); setError(null); }}
+placeholder="Email atau Username"
+autoComplete="off"
+autoCapitalize="off"
+spellCheck={false}
             className={`w-full bg-white/[0.04] border rounded-xl py-3 px-4 text-sm text-white placeholder:text-white/25 focus:outline-none transition-all ${
               error ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/10 focus:border-white/25'
             }`}
