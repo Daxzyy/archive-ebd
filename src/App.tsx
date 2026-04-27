@@ -258,6 +258,8 @@ function ProfilePage({ session }: { session: Session }) {
   const [displayName, setDisplayName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('');
   const [joinedAt, setJoinedAt] = useState('');
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -275,6 +277,8 @@ function ProfilePage({ session }: { session: Session }) {
         setJoinedAt(new Date(session.user.created_at).toLocaleDateString('id-ID', {
           year: 'numeric', month: 'long', day: 'numeric',
         }));
+      const { data: profileData } = await supabase.from('profiles').select('*');
+      setProfiles(profileData || []);
       } finally {
         setLoading(false);
       }
@@ -314,6 +318,14 @@ function ProfilePage({ session }: { session: Session }) {
             <span className="text-white/20 mx-1.5 font-light">/</span>
             <span className="text-white/40 font-medium">profile</span>
           </h1>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-white/40 hover:text-white"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
+              <path d="M120-240v-80h480v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/>
+            </svg>
+          </button>
         </div>
       </nav>
 
@@ -435,15 +447,26 @@ function ProfilePage({ session }: { session: Session }) {
         )}
       </div>
 
-      <footer className="border-t border-white/[0.05] py-5 mt-8">
+<footer className="border-t border-white/[0.05] py-5 mt-8">
         <div className="max-w-6xl mx-auto px-4">
           <p className="text-[11px] text-white/20 text-center">© 2026 Eberardos Community</p>
         </div>
       </footer>
+
+      <AnimatePresence>
+        {sidebarOpen && (
+          <Sidebar
+            session={session}
+            profiles={profiles}
+            onClose={() => setSidebarOpen(false)}
+            onNavigate={navigate}
+            onLogout={async () => { await getSupabase().auth.signOut(); navigate('/login'); }}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
-
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -602,13 +625,20 @@ function Admin({ session }: { session: Session }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
   const [dateUnknown, setDateUnknown] = useState(false);
   const [tags, setTags] = useState('');
   const [source, setSource] = useState('');
+
+  useEffect(() => {
+    getSupabase().from('profiles').select('*').then(({ data }) => {
+      setProfiles(data || []);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -671,15 +701,14 @@ function Admin({ session }: { session: Session }) {
             <span className="text-white/20 mx-1.5 font-light">/</span>
             <span className="text-white/40 font-medium">new archive</span>
           </h1>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] text-white/20 mono-text hidden sm:block">{session.user.email}</span>
-            <button
-              onClick={handleLogout}
-              className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-white/25 hover:text-white"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-white/40 hover:text-white"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
+              <path d="M120-240v-80h480v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/>
+            </svg>
+          </button>
         </div>
       </nav>
 
@@ -849,15 +878,26 @@ function Admin({ session }: { session: Session }) {
         </form>
       </div>
 
-      <footer className="border-t border-white/[0.05] py-5 mt-8">
+<footer className="border-t border-white/[0.05] py-5 mt-8">
         <div className="max-w-6xl mx-auto px-4">
           <p className="text-[11px] text-white/20 text-center">© 2026 Eberardos Community</p>
         </div>
       </footer>
+
+      <AnimatePresence>
+        {sidebarOpen && (
+          <Sidebar
+            session={session}
+            profiles={profiles}
+            onClose={() => setSidebarOpen(false)}
+            onNavigate={navigate}
+            onLogout={handleLogout}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
-
 function ArchiveCard({ archive, onClick }: { archive: Archive; onClick: () => void }) {
   const [loaded, setLoaded] = useState(false);
 
