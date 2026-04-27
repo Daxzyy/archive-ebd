@@ -370,7 +370,7 @@ const [initialAvatar, setInitialAvatar] = useState('');
         ) : (
           <>
             <div className="flex flex-col items-center gap-3 mb-8">
-              <div className="relative">
+              <div className="relative group cursor-pointer" onClick={() => document.getElementById('avatar-input')?.click()}>
                 <div className="w-20 h-20 rounded-full bg-red-400/20 border-2 border-red-400/30 flex items-center justify-center overflow-hidden">
                   {avatarUrl ? (
                     <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" onError={() => setAvatarUrl('')} />
@@ -378,9 +378,23 @@ const [initialAvatar, setInitialAvatar] = useState('');
                     <span className="text-3xl font-bold text-red-400 uppercase">{displayName?.[0] || '?'}</span>
                   )}
                 </div>
-                {avatarUrl && (
-                  <span className="absolute bottom-0.5 right-0.5 w-3 h-3 bg-green-400 border-2 border-[#131313] rounded-full" />
-                )}
+                <div className="absolute inset-0 rounded-full bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center">
+                  <Upload className="w-5 h-5 text-white/0 group-hover:text-white/80 transition-all" />
+                </div>
+                <input id="avatar-input" type="file" accept="image/*" className="hidden" onChange={async e => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const form = new FormData();
+                  form.append('file', file);
+                  try {
+                    const res = await fetch('https://upf.iyayn.web.id/uploadfile', { method: 'POST', body: form });
+                    const html = await res.text();
+                    const doc = new DOMParser().parseFromString(html, 'text/html');
+                    const url = doc.querySelector('#rawUrlLink')?.getAttribute('href');
+                    if (url) setAvatarUrl(url);
+                  } catch { setError('Upload gagal'); }
+                  e.target.value = '';
+                }} />
               </div>
               <div className="text-center">
                 <p className="text-white/80 font-semibold text-sm">{displayName || 'No name set'}</p>
