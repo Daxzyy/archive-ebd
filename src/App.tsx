@@ -158,12 +158,13 @@ function MetaCell({ icon, label, value }: { icon: React.ReactNode; label: string
     </div>
   );
 }
-function Sidebar({ session, profiles, onClose, onNavigate, onLogout }: {
+function Sidebar({ session, profiles, onClose, onNavigate, onLogout, currentPath }: {
   session: Session;
   profiles: Profile[];
   onClose: () => void;
   onNavigate: (path: string) => void;
   onLogout: () => void;
+  currentPath: string;
 }) {
   const profile = profiles.find(p => p.id === session.user.id);
   const displayName = profile?.display_name || session.user.email?.split('@')[0] || 'Admin';
@@ -197,8 +198,22 @@ function Sidebar({ session, profiles, onClose, onNavigate, onLogout }: {
           <div>
             <p className="text-[13px] font-semibold text-white/60 mb-1 px-3">Dashboard</p>
             <button
+              onClick={() => { onNavigate('/'); onClose(); }}
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-[13px] font-medium text-left group ${
+                currentPath === '/' ? 'bg-white/[0.08] text-white' : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <Archive className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
+                Home
+              </div>
+              <ChevronRight className="w-3.5 h-3.5 text-white/15 group-hover:text-white/40 transition-colors" />
+            </button>
+            <button
               onClick={() => { onNavigate('/admin'); onClose(); }}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-[13px] font-medium text-left group"
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-[13px] font-medium text-left group ${
+                currentPath === '/admin' ? 'bg-white/[0.08] text-white' : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
+              }`}
             >
               <div className="flex items-center gap-3">
                 <PlusCircle className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
@@ -224,7 +239,9 @@ function Sidebar({ session, profiles, onClose, onNavigate, onLogout }: {
             </div>
             <button
               onClick={() => { onNavigate('/profile'); onClose(); }}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-[13px] font-medium text-left group"
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-[13px] font-medium text-left group ${
+                currentPath === '/profile' ? 'bg-white/[0.08] text-white' : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
+              }`}
             >
               <div className="flex items-center gap-3">
                 <User className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
@@ -461,6 +478,7 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
             onClose={() => setSidebarOpen(false)}
             onNavigate={navigate}
             onLogout={async () => { await getSupabase().auth.signOut(); navigate('/login'); }}
+            currentPath="/profile"
           />
         )}
       </AnimatePresence>
@@ -892,6 +910,7 @@ function Admin({ session }: { session: Session }) {
             onClose={() => setSidebarOpen(false)}
             onNavigate={navigate}
             onLogout={handleLogout}
+            currentPath="/admin"
           />
         )}
       </AnimatePresence>
@@ -1184,6 +1203,7 @@ function Dashboard({ session }: { session: Session | null }) {
             onClose={() => setSidebarOpen(false)}
             onNavigate={navigate}
             onLogout={handleLogout}
+            currentPath="/"
           />
         )}
       </AnimatePresence>
