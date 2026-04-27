@@ -210,6 +210,19 @@ function Sidebar({ session, profiles, onClose, onNavigate, onLogout }: {
           </div>
           <div>
             <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-1 px-3">Account</p>
+            <div className="flex items-center gap-3 px-3 py-2.5 mb-1">
+              <div className="w-8 h-8 rounded-full bg-red-400/20 border border-red-400/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-[12px] font-bold text-red-400 uppercase">{displayName[0]}</span>
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[12px] font-semibold text-white/70 truncate">{displayName}</p>
+                <p className="text-[10px] text-white/25 truncate">{session.user.email}</p>
+              </div>
+            </div>
             <button
               onClick={() => { onNavigate('/profile'); onClose(); }}
               className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-white/50 hover:text-white hover:bg-white/[0.06] transition-all text-[13px] font-medium text-left group"
@@ -232,21 +245,6 @@ function Sidebar({ session, profiles, onClose, onNavigate, onLogout }: {
             </button>
           </div>
         </nav>
-        <div className="border-t border-white/[0.06] px-4 py-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-red-400/20 border border-red-400/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
-              {avatarUrl ? (
-                <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-[12px] font-bold text-red-400 uppercase">{displayName[0]}</span>
-              )}
-            </div>
-            <div className="min-w-0">
-              <p className="text-[12px] font-semibold text-white/70 truncate">{displayName}</p>
-              <p className="text-[10px] text-white/25 truncate">{session.user.email}</p>
-            </div>
-          </div>
-        </div>
       </motion.div>
     </div>
   );
