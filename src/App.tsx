@@ -361,17 +361,22 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-16 h-16 rounded-full bg-red-400/20 border-2 border-red-400/30 flex items-center justify-center overflow-hidden flex-shrink-0">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" onError={() => setAvatarUrl('')} />
-                ) : (
-                  <span className="text-2xl font-bold text-red-400 uppercase">{displayName?.[0] || '?'}</span>
+            <div className="flex flex-col items-center gap-3 mb-8">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full bg-red-400/20 border-2 border-red-400/30 flex items-center justify-center overflow-hidden">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" onError={() => setAvatarUrl('')} />
+                  ) : (
+                    <span className="text-3xl font-bold text-red-400 uppercase">{displayName?.[0] || '?'}</span>
+                  )}
+                </div>
+                {avatarUrl && (
+                  <span className="absolute bottom-0.5 right-0.5 w-3 h-3 bg-green-400 border-2 border-[#131313] rounded-full" />
                 )}
               </div>
-              <div>
-                <p className="text-white/80 font-semibold text-base">{displayName || 'No name set'}</p>
-                <p className="text-white/30 text-[12px]">{session.user.email}</p>
+              <div className="text-center">
+                <p className="text-white/80 font-semibold text-sm">{displayName || 'No name set'}</p>
+                <p className="text-white/30 text-[11px]">{session.user.email}</p>
               </div>
             </div>
 
@@ -400,17 +405,6 @@ const [sidebarOpen, setSidebarOpen] = useState(false);
                     onChange={e => setAvatarUrl(e.target.value)}
                     className={inputClass}
                   />
-                  {avatarUrl && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <img
-                        src={avatarUrl}
-                        alt="preview"
-                        onError={() => setError('URL gambar tidak valid')}
-                        className="w-8 h-8 rounded-full object-cover border border-white/10"
-                      />
-                      <span className="text-[10px] text-white/25">preview</span>
-                    </div>
-                  )}
                 </div>
               </div>
 
