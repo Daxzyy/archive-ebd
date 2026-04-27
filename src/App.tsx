@@ -291,8 +291,7 @@ function ProfilePage({ session }: { session: Session }) {
       const supabase = getSupabase();
       const { error: dbError } = await supabase
         .from('profiles')
-        .update({ display_name: displayName, avatar_url: avatarUrl || null })
-        .eq('id', session.user.id);
+        .upsert({ id: session.user.id, display_name: displayName, avatar_url: avatarUrl || null });
       if (dbError) throw dbError;
       setSuccess(true);
       setTimeout(() => setSuccess(false), 3000);
@@ -1123,6 +1122,18 @@ function Dashboard({ session }: { session: Session | null }) {
   );
 }
 
+function LogoutPage() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    getSupabase().auth.signOut().then(() => navigate('/login'));
+  }, []);
+  return (
+    <div className="min-h-screen bg-[#131313] flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-white/10 border-t-white/40 rounded-full animate-spin" />
+    </div>
+  );
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
@@ -1185,6 +1196,7 @@ export default function App() {
         <Route path="/login" element={session ? <Navigate to="/" /> : <Login />} />
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
         <Route path="/profile" element={session ? <ProfilePage session={session} /> : <Navigate to="/login" />} />
+        <Route path="/logout" element={<LogoutPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
