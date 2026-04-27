@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { createClient, SupabaseClient, Session } from '@supabase/supabase-js';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   AlertTriangle, Lock, LogOut, PlusCircle, Search, X, Calendar,
   ChevronRight, Tag, User, Image as ImageIcon, FileText,
   CheckCircle, ArrowLeft, Loader2, Upload, ExternalLink, Info,
-  AlertCircle, ArrowRight, Archive, Hash,
+  AlertCircle, ArrowRight, Archive as ArchiveIcon, Hash,
 } from 'lucide-react';
 import ImageUpload from './ImageUpload';
 
@@ -137,7 +137,7 @@ function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null;
               <div className="grid grid-cols-2 gap-2">
                 <MetaCell icon={<Calendar className="w-3.5 h-3.5 text-red-400" />} label="Tanggal" value={formatDate(archive.date, archive.date_unknown)} />
                 <MetaCell icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Source" value={archive.source || 'Unknown'} />
-                <MetaCell icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Upload by" value={uploader} />
+                <MetaCellLink icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Upload by" value={uploader} href={`/@${uploader}`} />
                 <MetaCell icon={<Hash className="w-3.5 h-3.5 text-red-400" />} label="Tags" value={archive.tags?.length > 0 ? archive.tags.join(', ') : 'Untagged'} />
               </div>
             </div>
@@ -205,7 +205,7 @@ function Sidebar({ session, profiles, onClose, onNavigate, onLogout, currentPath
               }`}
             >
               <div className="flex items-center gap-3">
-                <Archive className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
+                <ArchiveIcon className="w-4 h-4 text-red-400 group-hover:scale-110 transition-transform" />
                 Home
               </div>
               <ChevronRight className="w-3.5 h-3.5 text-white/15 group-hover:text-white/40 transition-colors" />
@@ -1213,6 +1213,191 @@ function Dashboard({ session }: { session: Session | null }) {
   );
 }
 
+function MetaCellLink({ icon, label, value, href }: { icon: React.ReactNode; label: string; value: string; href: string }) {
+  const navigate = useNavigate();
+  return (
+    <div
+      onClick={() => navigate(href)}
+      className="bg-white/[0.03] border border-white/[0.07] hover:border-white/20 hover:bg-white/[0.06] rounded-xl p-3 flex flex-col gap-1.5 cursor-pointer transition-all group"
+    >
+      <div className="flex items-center gap-1.5">
+        {icon}
+        <span className="text-[9px] font-bold text-white/25 uppercase tracking-widest">{label}</span>
+      </div>
+      <p className="text-[12px] text-red-400/80 group-hover:text-red-400 font-medium leading-tight underline decoration-dotted underline-offset-2">{value}</p>
+    </div>
+  );
+}
+
+function useDynamicMeta(title: string, description: string, image?: string) {
+  useEffect(() => {
+    document.title = title;
+    const setMeta = (property: string, content: string) => {
+      let el = document.querySelector(`meta[property="${property}"]`) as HTMLMetaElement | null;
+      if (!el) { el = document.createElement('meta'); el.setAttribute('property', property); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    };
+    const setMetaName = (name: string, content: string) => {
+      let el = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null;
+      if (!el) { el = document.createElement('meta'); el.setAttribute('name', name); document.head.appendChild(el); }
+      el.setAttribute('content', content);
+    };
+    setMeta('og:title', title);
+    setMeta('og:description', description);
+    if (image) { setMeta('og:image', image); setMetaName('twitter:image', image); }
+    setMetaName('twitter:card', 'summary');
+  }, [title, description, image]);
+}
+
+function UserProfilePage({ profiles: _ignored }: { profiles: Profile[] }) {
+  const { username } = useParams<{ username: string }>();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<(Profile & { bio?: string }) | null>(null);
+  const [archives, setArchives] = useState<Archive[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  useDynamicMeta(
+    profile ? `@${profile.display_name} — Eberardos Archive` : 'Eberardos Archive',
+    profile ? `${(profile as any).bio || 'Member Eberardos Community'} · ${archives.length} arsip diupload` : '',
+    profile?.avatar_url || undefined,
+  );
+
+  useEffect(() => {
+    if (!username) return;
+    const doFetch = async () => {
+      try {
+        const supabase = getSupabase();
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('display_name', username)
+          .single();
+        if (!profileData) { setNotFound(true); setLoading(false); return; }
+        setProfile(profileData);
+        const { data: archiveData } = await supabase
+          .from('archives')
+          .select('*')
+          .eq('uploaded_by', profileData.id)
+          .order('created_at', { ascending: false });
+        setArchives(archiveData || []);
+      } catch {
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+    doFetch();
+  }, [username]);
+
+  if (loading) return (
+    <div className="min-h-screen bg-[#131313] flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-white/10 border-t-white/40 rounded-full animate-spin" />
+    </div>
+  );
+
+  if (notFound) return (
+    <div className="min-h-screen bg-[#131313] flex flex-col items-center justify-center gap-4 px-4" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
+      <div className="text-center">
+        <p className="text-white/10 text-6xl font-bold mb-4">404</p>
+        <p className="text-white/50 text-sm font-semibold">User <span className="text-red-400">@{username}</span> tidak ditemukan</p>
+        <p className="text-white/25 text-xs mt-1">Username mungkin salah atau belum terdaftar</p>
+      </div>
+      <button
+        onClick={() => navigate('/')}
+        className="mt-2 flex items-center gap-1.5 text-white/25 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-wider group"
+      >
+        <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+        Kembali ke Home
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#131313] text-neutral-200" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
+      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-[100px] pointer-events-none" />
+
+      <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#131313]/90 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between" style={{ height: 52 }}>
+          <button onClick={() => navigate('/')} className="text-sm font-bold text-white/90 tracking-tight pixel-text hover:text-white transition-colors">
+            Eberardos
+            <span className="text-white/20 mx-1.5 font-light">/</span>
+            <span className="text-white/40 font-medium">@{username}</span>
+          </button>
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-[11px] font-bold text-white/35 hover:text-white tracking-wider"
+          >
+            <ArchiveIcon className="w-3 h-3" /> Archive
+          </button>
+        </div>
+      </nav>
+
+      <div className="max-w-2xl mx-auto px-4 py-10">
+        <div className="flex items-start gap-5 mb-8">
+          <div className="w-16 h-16 rounded-full bg-red-400/20 border-2 border-red-400/30 flex items-center justify-center overflow-hidden flex-shrink-0">
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt={profile.display_name || ''} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl font-bold text-red-400 uppercase">{(profile?.display_name || '?')[0]}</span>
+            )}
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg font-bold text-white/90 tracking-tight">{profile?.display_name}</h1>
+            <p className="text-[12px] text-white/30 mb-2">@{username}</p>
+            {(profile as any)?.bio && <p className="text-[13px] text-white/55 leading-relaxed">{(profile as any).bio}</p>}
+            <div className="flex items-center gap-4 mt-3">
+              <div className="flex flex-col">
+                <span className="text-base font-bold text-white/80" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{archives.length}</span>
+                <span className="text-[10px] text-white/25 uppercase tracking-widest font-bold">Arsip</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-3">Upload oleh @{username}</p>
+          {archives.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 border border-dashed border-white/[0.07] rounded-xl">
+              <p className="text-white/20 text-sm">Belum ada arsip</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {archives.map(a => (
+                <div key={a.id} onClick={() => navigate('/')} className="group border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300 flex flex-col overflow-hidden rounded-xl cursor-pointer">
+                  <div className="relative h-28 bg-white/5 overflow-hidden flex-shrink-0">
+                    <img src={a.image_url} alt={a.description} loading="lazy" className="w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.04]" />
+                    {a.tags?.length > 0 && (
+                      <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm text-[9px] font-bold text-red-400 uppercase tracking-widest border border-red-400/20 rounded">
+                        {a.tags[0]}
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-2.5">
+                    <p className="text-[11px] text-white/65 font-medium leading-snug line-clamp-2">{a.description || 'Untitled'}</p>
+                    <div className="flex items-center gap-1 mt-1.5">
+                      <Calendar className="w-2.5 h-2.5 text-red-400 flex-shrink-0" />
+                      <span className="text-[9px] text-white/30" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                        {formatDate(a.date, a.date_unknown)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <footer className="border-t border-white/[0.05] py-5 mt-4">
+        <div className="max-w-6xl mx-auto px-4">
+          <p className="text-[11px] text-white/20 text-center">© 2026 Eberardos Community</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
 function LogoutPage() {
   const navigate = useNavigate();
   useEffect(() => {
@@ -1288,6 +1473,7 @@ export default function App() {
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
         <Route path="/profile" element={session ? <ProfilePage session={session} /> : <Navigate to="/login" />} />
         <Route path="/logout" element={<LogoutPage />} />
+        <Route path="/@:username" element={<UserProfilePage profiles={[]} />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
