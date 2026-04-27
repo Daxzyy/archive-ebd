@@ -6,7 +6,7 @@ import {
   AlertTriangle, Lock, LogOut, PlusCircle, Search, X, Calendar,
   ChevronRight, Tag, User, Image as ImageIcon, FileText,
   CheckCircle, ArrowLeft, Loader2, Upload, ExternalLink, Info,
-  AlertCircle, ArrowRight,
+  AlertCircle, ArrowRight, Archive, Hash,
 } from 'lucide-react';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -55,125 +55,110 @@ function formatDate(dateStr: string | null, unknown: boolean): string {
   }
 }
 
+// ─── REDESIGNED MODAL ────────────────────────────────────────────────────────
 function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null; onClose: () => void; profiles: Profile[] }) {
   if (!archive) return null;
 
+  const uploader = profiles.find(p => p.id === archive.uploaded_by)?.display_name || 'Unknown';
+
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="absolute inset-0 bg-black/90 backdrop-blur-sm"
-        />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-5xl bg-card rounded-3xl overflow-hidden border border-gray-800 shadow-2xl flex flex-col md:flex-row max-h-[90vh]"
-        >
-          <button
+      {archive && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 bg-black/50 text-white rounded-full md:hidden"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+          />
+
+          {/* Modal — stacked vertical layout */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 40 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+            className="relative w-full sm:max-w-lg mx-auto bg-[#141414] border border-white/10 rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl max-h-[92vh] flex flex-col"
           >
-            <X className="w-6 h-6" />
-          </button>
+            {/* Drag handle (mobile) */}
+            <div className="flex justify-center pt-3 pb-1 sm:hidden">
+              <div className="w-10 h-1 bg-white/15 rounded-full" />
+            </div>
 
-          <div className="w-full md:w-2/3 bg-black flex items-center justify-center overflow-hidden relative group">
-            <img
-              src={archive.image_url}
-              alt={archive.description}
-              className="max-w-full max-h-[50vh] md:max-h-[90vh] object-contain transition-transform duration-700"
-            />
-            <a
-              href={archive.image_url}
-              target="_blank"
-              rel="noreferrer"
-              className="absolute bottom-4 right-4 p-3 bg-accent/20 hover:bg-accent/40 text-accent rounded-xl backdrop-blur-md border border-accent/20 transition-all opacity-0 group-hover:opacity-100"
-              title="Open full image"
-            >
-              <ExternalLink className="w-5 h-5" />
-            </a>
-          </div>
-
-          <div className="w-full md:w-1/3 p-6 md:p-8 overflow-y-auto bg-card border-l border-border">
+            {/* Close button */}
             <button
               onClick={onClose}
-              className="hidden md:flex items-center gap-2 text-muted hover:text-white transition-colors mb-8 group"
+              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-white/[0.08] hover:bg-white/15 border border-white/10 rounded-full transition-all"
             >
-              <X className="w-5 h-5 bg-border rounded-full p-1 group-hover:bg-accent group-hover:text-white transition-all shadow-lg" />
-              <span className="text-xs uppercase font-bold tracking-widest mono-text">Close Viewer</span>
+              <X className="w-3.5 h-3.5 text-white/60" />
             </button>
 
-            <div className="space-y-8">
-              <div className="space-y-4">
-                <h2 className="text-2xl font-bold text-white leading-snug">
-                  {archive.description || 'No description provided for this archive.'}
-                </h2>
-              </div>
+            {/* Image */}
+            <div className="relative bg-black w-full overflow-hidden flex-shrink-0" style={{ maxHeight: '55vh' }}>
+              <img
+                src={archive.image_url}
+                alt={archive.description}
+                className="w-full h-full object-contain"
+                style={{ maxHeight: '55vh' }}
+              />
+              {/* Open full image */}
+              <a
+                href={archive.image_url}
+                target="_blank"
+                rel="noreferrer"
+                className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 bg-black/60 hover:bg-black/80 backdrop-blur-sm border border-white/10 text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all"
+              >
+                <ExternalLink className="w-3 h-3" />
+                Full
+              </a>
+              {/* Tags overlay */}
+              {archive.tags?.length > 0 && (
+                <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap">
+                  {archive.tags.map(tag => (
+                    <span key={tag} className="px-2 py-0.5 bg-black/70 backdrop-blur-sm border border-white/10 text-[9px] font-bold text-red-400 uppercase tracking-widest rounded">
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
 
-              <div className="grid gap-6">
-                <div className="flex items-start gap-4">
-                  <div className="bg-border p-2.5 rounded-xl">
-                    <Calendar className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted uppercase tracking-widest font-bold mb-1 mono-text">Capture Date</p>
-                    <p className="text-gray-200 font-medium font-sans">
-                      {formatDate(archive.date, archive.date_unknown)}
-                    </p>
-                  </div>
-                </div>
+            {/* Info panel */}
+            <div className="overflow-y-auto px-5 py-5 flex flex-col gap-4">
+              {/* Description */}
+              <p className="text-white/85 text-[15px] font-semibold leading-snug">
+                {archive.description || 'No description provided.'}
+              </p>
 
-                <div className="flex items-start gap-4">
-                  <div className="bg-border p-2.5 rounded-xl">
-                    <User className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted uppercase tracking-widest font-bold mb-1 mono-text">Source</p>
-                    <p className="text-gray-200 font-medium font-sans">{archive.source || 'Unknown'}</p>
-                  </div>
-                </div>
-               <div className="flex items-start gap-4">
-  <div className="bg-border p-2.5 rounded-xl">
-    <User className="w-5 h-5 text-accent" />
-  </div>
-  <div>
-    <p className="text-[10px] text-muted uppercase tracking-widest font-bold mb-1 mono-text">Uploaded by</p>
-    <p className="text-gray-200 font-medium font-sans">
-      {profiles.find(p => p.id === archive?.uploaded_by)?.display_name || 'Unknown'}
-    </p>
-  </div>
-</div>
-                <div className="flex items-start gap-4">
-                  <div className="bg-border p-2.5 rounded-xl">
-                    <Tag className="w-5 h-5 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-muted uppercase tracking-widest font-bold mb-1 mono-text">Categories</p>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {archive.tags?.length > 0 ? (
-                        archive.tags.map(tag => (
-                          <span key={tag} className="px-3 py-1 bg-border text-gray-300 rounded-lg text-[10px] font-bold uppercase tracking-wider mono-text border border-white/5">
-                            {tag}
-                          </span>
-                        ))
-                      ) : (
-                        <span className="text-gray-500 text-[10px] italic mono-text">Untagged</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+              {/* Metadata grid */}
+              <div className="grid grid-cols-2 gap-2">
+                <MetaCell icon={<Calendar className="w-3.5 h-3.5 text-red-400" />} label="Tanggal" value={formatDate(archive.date, archive.date_unknown)} />
+                <MetaCell icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Source" value={archive.source || 'Unknown'} />
+                <MetaCell icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Upload by" value={uploader} />
+                <MetaCell icon={<Hash className="w-3.5 h-3.5 text-red-400" />} label="Tags" value={archive.tags?.length > 0 ? archive.tags.join(', ') : 'Untagged'} />
               </div>
             </div>
-          </div>
-        </motion.div>
-      </div>
+          </motion.div>
+        </div>
+      )}
     </AnimatePresence>
   );
 }
+
+function MetaCell({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-3 flex flex-col gap-1.5">
+      <div className="flex items-center gap-1.5">
+        {icon}
+        <span className="text-[9px] font-bold text-white/25 uppercase tracking-widest">{label}</span>
+      </div>
+      <p className="text-[12px] text-white/70 font-medium leading-tight">{value}</p>
+    </div>
+  );
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -232,7 +217,7 @@ function Login() {
           <div className="inline-flex items-center justify-center w-11 h-11 border border-white/10 bg-white/[0.04] rounded-xl mb-5">
             <Lock style={{ width: 18, height: 18 }} className="text-red-400" />
           </div>
-          <h1 className="text-base font-bold text-white/90 tracking-tight mb-1">
+          <h1 className="text-sm font-bold text-white/90 tracking-tight mb-1">
             Eberardos <span className="text-white/25 font-normal">/</span>{' '}
             <span className="text-white/45 font-medium">archive</span>
           </h1>
@@ -251,29 +236,29 @@ function Login() {
               error ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/10 focus:border-white/25'
             }`}
           />
-<div className="relative">
-  <input
-    type={showPassword ? 'text' : 'password'}
-    required
-    value={password}
-    onChange={e => { setPassword(e.target.value); setError(null); }}
-    placeholder="Password"
-    className={`w-full bg-white/[0.04] border rounded-xl py-3 px-4 pr-11 text-sm text-white placeholder:text-white/25 focus:outline-none transition-all ${
-      error ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/10 focus:border-white/25'
-    }`}
-  />
-  <button
-    type="button"
-    onClick={() => setShowPassword(v => !v)}
-    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
-  >
-    {showPassword ? (
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-    ) : (
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-    )}
-  </button>
-</div>
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              required
+              value={password}
+              onChange={e => { setPassword(e.target.value); setError(null); }}
+              placeholder="Password"
+              className={`w-full bg-white/[0.04] border rounded-xl py-3 px-4 pr-11 text-sm text-white placeholder:text-white/25 focus:outline-none transition-all ${
+                error ? 'border-red-500/50 focus:border-red-500/70' : 'border-white/10 focus:border-white/25'
+              }`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(v => !v)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 hover:text-white/60 transition-colors"
+            >
+              {showPassword ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              )}
+            </button>
+          </div>
 
           <button
             type="submit"
@@ -368,11 +353,11 @@ function Admin({ session }: { session: Session }) {
     >
       <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#131313]/90 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between" style={{ height: 52 }}>
-<h1 className="text-sm font-bold text-white/90 tracking-tight pixel-text">
-  Eberardos
-  <span className="text-white/20 mx-1.5 font-light">/</span>
-  <span className="text-white/40 font-medium">new archive</span>
-</h1>
+          <h1 className="text-sm font-bold text-white/90 tracking-tight pixel-text">
+            Eberardos
+            <span className="text-white/20 mx-1.5 font-light">/</span>
+            <span className="text-white/40 font-medium">new archive</span>
+          </h1>
           <div className="flex items-center gap-2">
             <span className="text-[10px] text-white/20 mono-text hidden sm:block">{session.user.email}</span>
             <button
@@ -666,14 +651,15 @@ function Dashboard({ session }: { session: Session | null }) {
 
   return (
     <div className="min-h-screen bg-[#131313] text-neutral-200" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
-  <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-[100px] pointer-events-none" />
+
       <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#131313]/90 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 h-13 flex items-center justify-between" style={{ height: 52 }}>
-<h1 className="text-sm font-bold text-white/90 tracking-tight pixel-text">
-  Eberardos
-  <span className="text-white/20 mx-1.5 font-light">/</span>
-  <span className="text-white/40 font-medium">archive</span>
-</h1>
+          <h1 className="text-sm font-bold text-white/90 tracking-tight pixel-text">
+            Eberardos
+            <span className="text-white/20 mx-1.5 font-light">/</span>
+            <span className="text-white/40 font-medium">archive</span>
+          </h1>
           <div className="flex items-center gap-2">
             {session ? (
               <>
@@ -703,6 +689,7 @@ function Dashboard({ session }: { session: Session | null }) {
       </nav>
 
       <div className="max-w-6xl mx-auto px-4 py-6 flex gap-7">
+        {/* Sidebar */}
         <aside className="hidden md:flex flex-col gap-5 w-44 flex-shrink-0 pt-1">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/20" />
@@ -760,12 +747,22 @@ function Dashboard({ session }: { session: Session | null }) {
           )}
         </aside>
 
+        {/* Main content */}
         <main className="flex-1 min-w-0">
+
+          {/* ── REVISED: Header row with count badge ── */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
               <span className="text-[12px] font-semibold text-white/40">
                 {hasFilters ? 'Filtered' : 'Recent'}
               </span>
+              {/* Count badge — bright & clear */}
+              {!loading && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-white/10 border border-white/15 rounded-full text-[11px] font-bold text-white tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  {filtered.length}
+                  <span className="text-white/40 font-normal text-[10px]">item{filtered.length !== 1 ? 's' : ''}</span>
+                </span>
+              )}
               {hasFilters && (
                 <button
                   onClick={() => { setSearch(''); setSelectedTag('All'); setSelectedYear('All'); }}
@@ -776,20 +773,16 @@ function Dashboard({ session }: { session: Session | null }) {
               )}
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="flex md:hidden relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/20" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={search}
-                  onChange={e => setSearch(e.target.value)}
-                  className="w-32 bg-white/[0.03] border border-white/[0.07] pl-7 pr-3 py-1.5 text-[12px] text-white/80 placeholder:text-white/20 focus:outline-none focus:border-white/20 transition-all rounded-lg"
-                />
-              </div>
-              <span className="text-[11px] text-white/20 tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                {loading ? '—' : `${filtered.length} items`}
-              </span>
+            {/* Mobile search */}
+            <div className="flex md:hidden relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/20" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-32 bg-white/[0.03] border border-white/[0.07] pl-7 pr-3 py-1.5 text-[12px] text-white/80 placeholder:text-white/20 focus:outline-none focus:border-white/20 transition-all rounded-lg"
+              />
             </div>
           </div>
 
