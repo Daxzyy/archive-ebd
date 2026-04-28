@@ -277,7 +277,7 @@ function ProfilePage({ session }: { session: Session }) {
   const [avatarUrl, setAvatarUrl] = useState('');
   const [joinedAt, setJoinedAt] = useState('');
   const [profiles, setProfiles] = useState<Profile[]>([]);
-const [sidebarOpen, setSidebarOpen] = useState(false);
+const [_unused] = useState(false)
 const [initialName, setInitialName] = useState('');
 const [initialAvatar, setInitialAvatar] = useState('');
 const [bio, setBio] = useState('');
@@ -348,14 +348,7 @@ const [initialBio, setInitialBio] = useState('');
             <span className="text-white/20 mx-1.5 font-light">/</span>
             <span className="text-white/40 font-medium">profile</span>
           </h1>
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-white/40 hover:text-white"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
-              <path d="M120-240v-80h480v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/>
-            </svg>
-          </button>
+          <span />
         </div>
       </nav>
 
@@ -486,24 +479,13 @@ const [initialBio, setInitialBio] = useState('');
         )}
       </div>
 
-<footer className="border-t border-white/[0.05] py-5 mt-8">
+<footer className="border-t border-white/[0.05] py-5 mt-8 mb-16">
         <div className="max-w-6xl mx-auto px-4">
           <p className="text-[11px] text-white/20 text-center">© 2026 Eberardos Community</p>
         </div>
       </footer>
 
-      <AnimatePresence>
-        {sidebarOpen && (
-          <Sidebar
-            session={session}
-            profiles={profiles}
-            onClose={() => setSidebarOpen(false)}
-            onNavigate={navigate}
-            onLogout={async () => { await getSupabase().auth.signOut(); navigate('/login'); }}
-            currentPath="/profile"
-          />
-        )}
-      </AnimatePresence>
+      <TabBar session={session} profiles={profiles} currentPath="/profile" />
     </div>
   );
 }
@@ -667,7 +649,6 @@ function Admin({ session }: { session: Session }) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
@@ -742,14 +723,7 @@ function Admin({ session }: { session: Session }) {
             <span className="text-white/20 mx-1.5 font-light">/</span>
             <span className="text-white/40 font-medium">new archive</span>
           </h1>
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-white/40 hover:text-white"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
-              <path d="M120-240v-80h480v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/>
-            </svg>
-          </button>
+          <span />
         </div>
       </nav>
 
@@ -899,27 +873,91 @@ function Admin({ session }: { session: Session }) {
         </form>
       </div>
 
-<footer className="border-t border-white/[0.05] py-5 mt-8">
+<footer className="border-t border-white/[0.05] py-5 mt-8 mb-16">
         <div className="max-w-6xl mx-auto px-4">
           <p className="text-[11px] text-white/20 text-center">© 2026 Eberardos Community</p>
         </div>
       </footer>
 
-      <AnimatePresence>
-        {sidebarOpen && (
-          <Sidebar
-            session={session}
-            profiles={profiles}
-            onClose={() => setSidebarOpen(false)}
-            onNavigate={navigate}
-            onLogout={handleLogout}
-            currentPath="/admin"
-          />
-        )}
-      </AnimatePresence>
+      <TabBar session={session} profiles={profiles} currentPath="/admin" />
     </div>
   );
 }
+
+function TabBar({ session, profiles, currentPath }: { session: Session; profiles: Profile[]; currentPath: string }) {
+  const navigate = useNavigate();
+  const profile = profiles.find(p => p.id === session.user.id);
+  const avatarUrl = profile?.avatar_url;
+  const displayName = profile?.display_name || '';
+
+  const tabs = [
+    {
+      path: '/',
+      label: 'Home',
+      icon: (active: boolean) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
+          <path d="M9 21V12h6v9"/>
+        </svg>
+      ),
+    },
+    {
+      path: '/explore',
+      label: 'Explore',
+      icon: (active: boolean) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+      ),
+    },
+    {
+      path: '/admin',
+      label: 'New',
+      icon: (_active: boolean) => (
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 8v8M8 12h8"/>
+        </svg>
+      ),
+    },
+    {
+      path: '/profile',
+      label: 'Profile',
+      icon: (active: boolean) =>
+        avatarUrl ? (
+          <img src={avatarUrl} alt={displayName} className={`w-6 h-6 rounded-full object-cover border-2 transition-all ${active ? 'border-red-400' : 'border-white/20'}`} />
+        ) : (
+          <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all text-[10px] font-bold uppercase ${active ? 'border-red-400 bg-red-400/20 text-red-400' : 'border-white/20 bg-white/5 text-white/40'}`}>
+            {displayName?.[0] || '?'}
+          </div>
+        ),
+    },
+  ];
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-[60] bg-[#131313]/95 backdrop-blur-md border-t border-white/[0.07]" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div className="max-w-md mx-auto flex items-stretch">
+        {tabs.map(tab => {
+          const active = currentPath === tab.path;
+          return (
+            <button
+              key={tab.path}
+              onClick={() => navigate(tab.path)}
+              className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 transition-all ${active ? 'text-red-400' : 'text-white/30 hover:text-white/60'}`}
+            >
+              {tab.icon(active)}
+              <span className={`text-[9px] font-bold uppercase tracking-widest transition-all ${active ? 'text-red-400' : 'text-white/25'}`}>
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function ArchiveCard({ archive, onClick }: { archive: Archive; onClick: () => void }) {
   const [loaded, setLoaded] = useState(false);
 
@@ -976,7 +1014,6 @@ function Dashboard({ session }: { session: Session | null }) {
   const [selectedArchive, setSelectedArchive] = useState<Archive | null>(null);
   const [allTags, setAllTags] = useState<string[]>([]);
   const [allYears, setAllYears] = useState<string[]>([]);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => { fetchArchives(); }, []);
 
@@ -1036,21 +1073,12 @@ function Dashboard({ session }: { session: Session | null }) {
             <span className="text-white/40 font-medium">archive</span>
           </h1>
           <div className="flex items-center gap-2">
-            {!session ? (
+            {!session && (
               <button
                 onClick={() => navigate('/login')}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-[11px] font-bold text-white/35 hover:text-white tracking-wider"
               >
                 <Lock className="w-3 h-3" /> Access
-              </button>
-            ) : (
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="p-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-white/40 hover:text-white"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" height="18px" viewBox="0 -960 960 960" width="18px" fill="currentColor">
-                  <path d="M120-240v-80h480v80H120Zm0-200v-80h720v80H120Zm0-200v-80h720v80H120Z"/>
-                </svg>
               </button>
             )}
           </div>
@@ -1190,25 +1218,14 @@ function Dashboard({ session }: { session: Session | null }) {
         </main>
       </div>
 
-      <footer className="border-t border-white/[0.05] py-5 mt-4">
+      <footer className="border-t border-white/[0.05] py-5 mt-4 mb-16">
         <div className="max-w-6xl mx-auto px-4">
           <p className="text-[11px] text-white/20 text-center">© 2026 Eberardos Community</p>
         </div>
       </footer>
 
       <ArchiveModal archive={selectedArchive} onClose={() => setSelectedArchive(null)} profiles={profiles} />
-      <AnimatePresence>
-        {session && sidebarOpen && (
-          <Sidebar
-            session={session}
-            profiles={profiles}
-            onClose={() => setSidebarOpen(false)}
-            onNavigate={navigate}
-            onLogout={handleLogout}
-            currentPath="/"
-          />
-        )}
-      </AnimatePresence>
+      {session && <TabBar session={session} profiles={profiles} currentPath="/" />}
     </div>
   );
 }
