@@ -1468,10 +1468,11 @@ export default function App() {
 <Routes>
         <Route path="/" element={session ? <Dashboard session={session} /> : <Navigate to="/login" />} />
         <Route path="/login" element={session ? <Navigate to="/" /> : <Login />} />
+        <Route path="/@:username" element={<UserProfilePage profiles={[]} />} />
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
         <Route path="/profile" element={session ? <ProfilePage session={session} /> : <Navigate to="/login" />} />
         <Route path="/logout" element={<LogoutPage />} />
-        <Route path="/@:username" element={session ? <UserProfilePage profiles={[]} /> : <Navigate to="/login" />} />
+        <Route path="/@:username" element={<UserProfilePage profiles={[]} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
