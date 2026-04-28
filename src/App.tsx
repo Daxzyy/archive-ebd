@@ -1289,8 +1289,9 @@ function useDynamicMeta(title: string, description: string, image?: string) {
   }, [title, description, image]);
 }
 
-function UserProfilePage({ profiles: _ignored }: { profiles: Profile[] }) {
-  const { username } = useParams<{ username: string }>();
+function UserProfilePage({ profiles: _ignored, username: usernameProp }: { profiles: Profile[]; username?: string }) {
+  const { username: usernameParam } = useParams<{ username: string }>();
+  const username = usernameProp ?? usernameParam;
   const navigate = useNavigate();
   const [profile, setProfile] = useState<(Profile & { bio?: string }) | null>(null);
   const [archives, setArchives] = useState<Archive[]>([]);
@@ -1725,7 +1726,7 @@ function ArchiveDetailPage({ session }: { session: Session | null }) {
 function SlugOrUserRouter({ session }: { session: Session | null }) {
   const { slug } = useParams<{ slug: string }>();
   if (slug?.startsWith('@')) {
-    return <UserProfilePage profiles={[]} />;
+    return <UserProfilePage profiles={[]} username={slug} />;
   }
   return <ArchiveDetailPage session={session} />;
 }
