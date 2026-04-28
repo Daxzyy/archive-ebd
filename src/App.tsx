@@ -82,7 +82,7 @@ function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null;
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ type: 'spring', damping: 30, stiffness: 340 }}
             className="relative w-full max-w-3xl mx-auto bg-[#141414] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col sm:flex-row"
-            style={{ maxHeight: '88vh' }}
+style={{ maxHeight: '88vh', height: '88vh' }}
           >
             {/* Close button */}
             <button
@@ -94,7 +94,7 @@ function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null;
 
             {/* LEFT — Image panel */}
             <div className="relative bg-black flex-shrink-0 sm:w-[55%] overflow-hidden flex items-center justify-center"
-              style={{ minHeight: 220 }}>
+  style={{ minHeight: 220, maxHeight: '88vh' }}>
               <img
                 src={archive.image_url}
                 alt={archive.description}
@@ -124,7 +124,7 @@ function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null;
             </div>
 
             {/* RIGHT — Info panel */}
-            <div className="flex-1 flex flex-col overflow-y-auto px-5 py-5 gap-5 min-w-0">
+            <div className="flex-1 flex flex-col overflow-y-auto px-5 py-5 gap-5 min-w-0" style={{ maxHeight: '50vh' }}>
               {/* Description */}
               <div>
                 <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest mb-1.5">Deskripsi</p>
