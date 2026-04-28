@@ -579,7 +579,7 @@ function Login() {
         }
       `}</style>
 
-      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-b from-[#131313] via-[#161414] to-[#131313] pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -1026,7 +1026,7 @@ function Dashboard({ session }: { session: Session | null }) {
 
   return (
     <div className="min-h-screen bg-[#131313] text-neutral-200" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
-      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-b from-[#131313] via-[#161414] to-[#131313] pointer-events-none" />
 
       <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#131313]/90 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 h-13 flex items-center justify-between" style={{ height: 52 }}>
@@ -1316,7 +1316,7 @@ function UserProfilePage({ profiles: _ignored }: { profiles: Profile[] }) {
 
   return (
     <div className="min-h-screen bg-[#131313] text-neutral-200" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
-      <div className="fixed top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-500/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-b from-[#131313] via-[#161414] to-[#131313] pointer-events-none" />
 
       <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#131313]/90 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between" style={{ height: 52 }}>
@@ -1335,26 +1335,25 @@ function UserProfilePage({ profiles: _ignored }: { profiles: Profile[] }) {
       </nav>
 
       <div className="max-w-2xl mx-auto px-4 py-6">
-        <div className="flex items-center gap-4 mb-4 pb-4 border-b border-white/[0.06]">
-          <div className="w-20 h-20 rounded-full bg-red-400/20 border-2 border-red-400/30 flex items-center justify-center overflow-hidden flex-shrink-0">
+        <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/[0.10]">
+          <div className="w-[72px] h-[72px] rounded-full bg-red-400/20 border-2 border-red-400/30 flex items-center justify-center overflow-hidden flex-shrink-0">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt={profile.display_name || ''} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-3xl font-bold text-red-400 uppercase">{(profile?.display_name || '?')[0]}</span>
+              <span className="text-2xl font-bold text-red-400 uppercase">{(profile?.display_name || '?')[0]}</span>
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between">
-              <h1 className="text-base font-bold text-white/90 tracking-tight leading-tight">{profile?.display_name}</h1>
-              <span className="text-[11px] text-white/40 font-medium tabular-nums">{archives.length} posts</span>
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-[15px] font-bold text-white/90 tracking-tight leading-tight">{profile?.display_name}</h1>
+              <span className="text-[11px] text-white/35 font-medium tabular-nums">{archives.length} posts</span>
             </div>
-            <p className="text-[12px] text-white/35 leading-tight mb-1">@{username?.startsWith('@') ? username.slice(1) : username}</p>
-            {(profile as any)?.bio && <p className="text-[12px] text-white/50 leading-snug">{(profile as any).bio}</p>}
+            <p className="text-[12px] text-white/35 leading-tight mt-0.5">@{username?.startsWith('@') ? username.slice(1) : username}</p>
+            {(profile as any)?.bio && <p className="text-[12px] text-white/70 leading-snug mt-1">{(profile as any).bio}</p>}
           </div>
         </div>
 
         <div className="mb-4">
-          <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-3 opacity-50">@{username?.startsWith('@') ? username.slice(1) : username}</p>
           {archives.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 border border-dashed border-white/[0.07] rounded-xl">
               <p className="text-white/20 text-sm">Belum ada arsip</p>
@@ -1387,7 +1386,7 @@ function UserProfilePage({ profiles: _ignored }: { profiles: Profile[] }) {
         </div>
       </div>
 
-      <footer className="border-t border-white/[0.05] py-5 mt-4">
+      <footer className="border-t border-white/[0.05] py-5 mt-16">
         <div className="max-w-6xl mx-auto px-4">
           <p className="text-[11px] text-white/20 text-center">© 2026 Eberardos Community</p>
         </div>
