@@ -1216,7 +1216,7 @@ function MetaCellLink({ icon, label, value, href }: { icon: React.ReactNode; lab
   const navigate = useNavigate();
   return (
     <div
-      onClick={() => navigate(href)}
+      onClick={(e) => { e.stopPropagation(); navigate(href); }}
       className="bg-white/[0.03] border border-white/[0.07] hover:border-white/20 hover:bg-white/[0.06] rounded-xl p-3 flex flex-col gap-1.5 cursor-pointer transition-all group"
     >
       <div className="flex items-center gap-1.5">
