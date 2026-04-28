@@ -1268,10 +1268,11 @@ function UserProfilePage({ profiles: _ignored }: { profiles: Profile[] }) {
     const doFetch = async () => {
       try {
         const supabase = getSupabase();
+        const cleanUsername = username.startsWith('@') ? username.slice(1) : username;
         const { data: profileData } = await supabase
           .from('profiles')
           .select('*')
-          .eq('display_name', username)
+          .eq('display_name', cleanUsername)
           .single();
         if (!profileData) { setNotFound(true); setLoading(false); return; }
         setProfile(profileData);
@@ -1467,13 +1468,13 @@ export default function App() {
 
   return (
     <Router>
-      <Routes>
-        <Route path="/@:username" element={session ? <UserProfilePage profiles={[]} /> : <Navigate to={`/login?next=${encodeURIComponent(window.location.pathname)}`} replace />} />
+<Routes>
         <Route path="/" element={session ? <Dashboard session={session} /> : <Navigate to="/login" />} />
         <Route path="/login" element={session ? <Navigate to="/" /> : <Login />} />
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
         <Route path="/profile" element={session ? <ProfilePage session={session} /> : <Navigate to="/login" />} />
         <Route path="/logout" element={<LogoutPage />} />
+        <Route path="/:username" element={session ? <UserProfilePage profiles={[]} /> : <Navigate to="/login" />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
