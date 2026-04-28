@@ -35,6 +35,7 @@ export type Archive = {
   source: string;
   uploaded_by: string | null;
   created_at: string;
+  slug: string;
 };
 
 type Profile = {
@@ -54,6 +55,11 @@ function formatDate(dateStr: string | null, unknown: boolean): string {
   } catch {
     return 'Invalid Date';
   }
+}
+
+function generateSlug(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  return Array.from({ length: 12 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
 // ─── REDESIGNED MODAL — Split Layout ─────────────────────────────────────────
@@ -713,6 +719,7 @@ function Admin({ session }: { session: Session }) {
         tags: tags.split(',').map(t => t.trim()).filter(t => t !== ''),
         source,
         uploaded_by: session.user.id,
+        slug: generateSlug(),
       }]);
 
       if (dbError) {
@@ -986,6 +993,7 @@ function TabBar({ session, profiles, currentPath }: { session: Session; profiles
 }
 
 function ArchiveCard({ archive, onClick }: { archive: Archive; onClick: () => void }) {
+  const navigate = useNavigate();
   const [loaded, setLoaded] = useState(false);
 
   return (
@@ -993,7 +1001,7 @@ function ArchiveCard({ archive, onClick }: { archive: Archive; onClick: () => vo
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      onClick={onClick}
+      onClick={() => navigate(`/a/${archive.slug}`)}
       className="group border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300 cursor-pointer overflow-hidden rounded-xl break-inside-avoid mb-3"
     >
       <div className="relative bg-white/5 overflow-hidden">
@@ -1577,6 +1585,112 @@ function SearchPage({ session }: { session: Session }) {
   );
 }
 
+function ArchiveDetailPage({ session }: { session: Session | null }) {
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  const [archive, setArchive] = useState<Archive | null>(null);
+  const [uploader, setUploader] = useState<string>('Unknown');
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+
+  useDynamicMeta(
+    archive ? `${archive.description} — Eberardos Archive` : 'Eberardos Archive',
+    archive ? `Diarsipkan ${formatDate(archive.date, archive.date_unknown)}` : '',
+    archive?.image_url,
+  );
+
+  useEffect(() => {
+    if (!slug) return;
+    const doFetch = async () => {
+      try {
+        const supabase = getSupabase();
+        const { data } = await supabase.from('archives').select('*').eq('slug', slug).single();
+        if (!data) { setNotFound(true); setLoading(false); return; }
+        setArchive(data);
+        if (data.uploaded_by) {
+          const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', data.uploaded_by).single();
+          setUploader(profile?.display_name || 'Unknown');
+        }
+      } catch { setNotFound(true); }
+      finally { setLoading(false); }
+    };
+    doFetch();
+  }, [slug]);
+
+  if (loading) return (
+    <div className="min-h-screen bg-[#131313] flex items-center justify-center">
+      <div className="w-6 h-6 border-2 border-white/10 border-t-white/40 rounded-full animate-spin" />
+    </div>
+  );
+
+  if (notFound || !archive) return (
+    <div className="min-h-screen bg-[#131313] flex flex-col items-center justify-center gap-4 px-4" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
+      <p className="text-white/10 text-6xl font-bold">404</p>
+      <p className="text-white/50 text-sm font-semibold">Arsip tidak ditemukan</p>
+      <button onClick={() => navigate('/')} className="mt-2 flex items-center gap-1.5 text-white/25 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-wider group">
+        <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" /> Kembali
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-[#131313] text-neutral-200" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
+      <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#131313]/90 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between" style={{ height: 52 }}>
+          <button onClick={() => navigate('/')} className="text-sm font-bold text-white/90 tracking-tight pixel-text hover:text-white transition-colors">
+            Eberardos
+            <span className="text-white/20 mx-1.5 font-light">/</span>
+            <span className="text-white/40 font-medium">archive</span>
+          </button>
+          <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-[11px] font-bold text-white/35 hover:text-white tracking-wider">
+            <ArrowLeft className="w-3 h-3" /> Back
+          </button>
+        </div>
+      </nav>
+
+      <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-5">
+        <div className="rounded-xl overflow-hidden bg-black border border-white/10">
+          <img src={archive.image_url} alt={archive.description} className="w-full h-auto object-contain" />
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <div>
+            <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest mb-1.5">Deskripsi</p>
+            <p className="text-white/85 text-[15px] font-semibold leading-snug">{archive.description || 'No description.'}</p>
+          </div>
+          <div className="border-t border-white/[0.07]" />
+          <div className="flex flex-col gap-3">
+            <MetaRow icon={<Calendar className="w-3.5 h-3.5 text-red-400" />} label="Tanggal" value={formatDate(archive.date, archive.date_unknown)} />
+            <MetaRow icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Source" value={archive.source || 'Unknown'} />
+            <MetaRow icon={<Hash className="w-3.5 h-3.5 text-red-400" />} label="Tags" value={archive.tags?.length > 0 ? archive.tags.join(', ') : 'Untagged'} />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-red-400" />
+                <span className="text-[10px] font-bold text-white/25 uppercase tracking-widest">Upload by</span>
+              </div>
+              <Link to={uploader !== 'Unknown' ? `/@${uploader}` : '#'} className="text-[12px] text-red-400/80 hover:text-red-400 font-medium underline decoration-dotted underline-offset-2 transition-colors">
+                {uploader}
+              </Link>
+            </div>
+          </div>
+          <div className="border-t border-white/[0.07]" />
+          <a href={archive.image_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl text-[12px] text-white/50 hover:text-white transition-all w-fit">
+            <ExternalLink className="w-3.5 h-3.5" /> Lihat foto asli
+          </a>
+        </div>
+      </div>
+
+      <footer className="border-t border-white/[0.05] py-5 mt-4 mb-16">
+        <div className="max-w-6xl mx-auto px-4">
+          <p className="text-[11px] text-white/20 text-center">© 2026 Eberardos Community</p>
+        </div>
+      </footer>
+
+      {session && <TabBar session={session} profiles={[]} currentPath="" />}
+    </div>
+  );
+}
+
 function LogoutPage() {
   const navigate = useNavigate();
   useEffect(() => {
@@ -1653,6 +1767,7 @@ export default function App() {
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
         <Route path="/profile" element={session ? <ProfilePage session={session} /> : <Navigate to="/login" />} />
         <Route path="/logout" element={<LogoutPage />} />
+        <Route path="/a/:slug" element={<ArchiveDetailPage session={session} />} />
         <Route path="/:username" element={<UserProfilePage profiles={[]} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
