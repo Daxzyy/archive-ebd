@@ -1265,10 +1265,11 @@ function UserProfilePage({ profiles: _ignored }: { profiles: Profile[] }) {
 
   useEffect(() => {
     if (!username) return;
+    if (!username.startsWith('@')) { navigate('/', { replace: true }); return; }
     const doFetch = async () => {
       try {
         const supabase = getSupabase();
-        const cleanUsername = username;
+        const cleanUsername = username.slice(1);
         const { data: profileData } = await supabase
           .from('profiles')
           .select('*')
@@ -1471,7 +1472,7 @@ export default function App() {
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
         <Route path="/profile" element={session ? <ProfilePage session={session} /> : <Navigate to="/login" />} />
         <Route path="/logout" element={<LogoutPage />} />
-        <Route path="/@:username" element={<UserProfilePage profiles={[]} />} />
+        <Route path="/:username" element={<UserProfilePage profiles={[]} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
