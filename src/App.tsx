@@ -56,7 +56,7 @@ function formatDate(dateStr: string | null, unknown: boolean): string {
   }
 }
 
-// ─── REDESIGNED MODAL ────────────────────────────────────────────────────────
+// ─── REDESIGNED MODAL — Split Layout ─────────────────────────────────────────
 function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null; onClose: () => void; profiles: Profile[] }) {
   if (!archive) return null;
 
@@ -65,7 +65,7 @@ function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null;
   return (
     <AnimatePresence>
       {archive && (
-        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -75,45 +75,32 @@ function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null;
             className="absolute inset-0 bg-black/80 backdrop-blur-md"
           />
 
-          {/* Modal — stacked vertical layout */}
+          {/* Modal — split layout */}
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 40 }}
-            transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-            className="relative w-full sm:max-w-lg mx-auto bg-[#141414] border border-white/10 rounded-t-3xl sm:rounded-2xl overflow-hidden shadow-2xl max-h-[92vh] flex flex-col"
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ type: 'spring', damping: 30, stiffness: 340 }}
+            className="relative w-full max-w-3xl mx-auto bg-[#141414] border border-white/10 rounded-2xl overflow-hidden shadow-2xl flex flex-col sm:flex-row"
+            style={{ maxHeight: '88vh' }}
           >
-            {/* Drag handle (mobile) */}
-            <div className="flex justify-center pt-3 pb-1 sm:hidden">
-              <div className="w-10 h-1 bg-white/15 rounded-full" />
-            </div>
-
             {/* Close button */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center bg-white/[0.08] hover:bg-white/15 border border-white/10 rounded-full transition-all"
+              className="absolute top-3 right-3 z-20 w-7 h-7 flex items-center justify-center bg-black/50 hover:bg-black/80 backdrop-blur-sm border border-white/10 rounded-full transition-all"
             >
-              <X className="w-3.5 h-3.5 text-white/60" />
+              <X className="w-3 h-3 text-white/60" />
             </button>
 
-            {/* Image */}
-            <div className="relative bg-black w-full overflow-hidden flex-shrink-0" style={{ maxHeight: '55vh' }}>
+            {/* LEFT — Image panel */}
+            <div className="relative bg-black flex-shrink-0 sm:w-[55%] overflow-hidden flex items-center justify-center"
+              style={{ minHeight: 220 }}>
               <img
                 src={archive.image_url}
                 alt={archive.description}
                 className="w-full h-full object-contain"
-                style={{ maxHeight: '55vh' }}
+                style={{ maxHeight: '88vh' }}
               />
-              {/* Open full image */}
-              <a
-                href={archive.image_url}
-                target="_blank"
-                rel="noreferrer"
-                className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 bg-black/60 hover:bg-black/80 backdrop-blur-sm border border-white/10 text-white/50 hover:text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all"
-              >
-                <ExternalLink className="w-3 h-3" />
-                Full
-              </a>
               {/* Tags overlay */}
               {archive.tags?.length > 0 && (
                 <div className="absolute top-3 left-3 flex gap-1.5 flex-wrap">
@@ -124,27 +111,67 @@ function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null;
                   ))}
                 </div>
               )}
+              {/* Full image link */}
+              
+                href={archive.image_url}
+                target="_blank"
+                rel="noreferrer"
+                className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2 py-1 bg-black/60 hover:bg-black/90 backdrop-blur-sm border border-white/10 text-white/40 hover:text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all"
+              >
+                <ExternalLink className="w-3 h-3" />
+                Full
+              </a>
             </div>
 
-            {/* Info panel */}
-            <div className="overflow-y-auto px-5 py-5 flex flex-col gap-4">
+            {/* RIGHT — Info panel */}
+            <div className="flex-1 flex flex-col overflow-y-auto px-5 py-5 gap-5 min-w-0">
               {/* Description */}
-              <p className="text-white/85 text-[15px] font-semibold leading-snug">
-                {archive.description || 'No description provided.'}
-              </p>
+              <div>
+                <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest mb-1.5">Deskripsi</p>
+                <p className="text-white/85 text-[14px] font-semibold leading-snug">
+                  {archive.description || 'No description provided.'}
+                </p>
+              </div>
 
-              {/* Metadata grid */}
-              <div className="grid grid-cols-2 gap-2">
-                <MetaCell icon={<Calendar className="w-3.5 h-3.5 text-red-400" />} label="Tanggal" value={formatDate(archive.date, archive.date_unknown)} />
-                <MetaCell icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Source" value={archive.source || 'Unknown'} />
-                <MetaCellLink icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Upload by" value={uploader} href={uploader !== 'Unknown' ? `/@${uploader}` : '#'} />
-                <MetaCell icon={<Hash className="w-3.5 h-3.5 text-red-400" />} label="Tags" value={archive.tags?.length > 0 ? archive.tags.join(', ') : 'Untagged'} />
+              {/* Divider */}
+              <div className="border-t border-white/[0.07]" />
+
+              {/* Metadata — vertical list */}
+              <div className="flex flex-col gap-3">
+                <MetaRow icon={<Calendar className="w-3.5 h-3.5 text-red-400" />} label="Tanggal" value={formatDate(archive.date, archive.date_unknown)} />
+                <MetaRow icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Source" value={archive.source || 'Unknown'} />
+                <MetaRow icon={<Hash className="w-3.5 h-3.5 text-red-400" />} label="Tags" value={archive.tags?.length > 0 ? archive.tags.join(', ') : 'Untagged'} />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-red-400" />
+                    <span className="text-[10px] font-bold text-white/25 uppercase tracking-widest">Upload by</span>
+                  </div>
+                  <Link
+                    to={uploader !== 'Unknown' ? `/@${uploader}` : '#'}
+                    onClick={(e) => { e.stopPropagation(); onClose(); }}
+                    className="text-[12px] text-red-400/80 hover:text-red-400 font-medium underline decoration-dotted underline-offset-2 transition-colors"
+                  >
+                    {uploader}
+                  </Link>
+                </div>
               </div>
             </div>
           </motion.div>
         </div>
       )}
     </AnimatePresence>
+  );
+}
+
+function MetaRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        {icon}
+        <span className="text-[10px] font-bold text-white/25 uppercase tracking-widest">{label}</span>
+      </div>
+      <p className="text-[12px] text-white/65 font-medium leading-tight text-right">{value}</p>
+    </div>
   );
 }
 
@@ -967,16 +994,16 @@ function ArchiveCard({ archive, onClick }: { archive: Archive; onClick: () => vo
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       onClick={onClick}
-      className="group border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300 cursor-pointer flex flex-col overflow-hidden rounded-xl"
+      className="group border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300 cursor-pointer overflow-hidden rounded-xl break-inside-avoid mb-3"
     >
-      <div className="relative h-36 bg-white/5 overflow-hidden flex-shrink-0">
-        {!loaded && <div className="absolute inset-0 animate-pulse bg-white/5" />}
+      <div className="relative bg-white/5 overflow-hidden">
+        {!loaded && <div className="w-full h-28 animate-pulse bg-white/5" />}
         <img
           src={archive.image_url}
           alt={archive.description}
           loading="lazy"
           onLoad={() => setLoaded(true)}
-          className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.04] ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          className={`w-full h-auto block transition-all duration-500 group-hover:scale-[1.02] ${loaded ? 'opacity-100' : 'opacity-0 h-0'}`}
         />
         {archive.tags?.length > 0 && (
           <span className="absolute top-2 left-2 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm text-[9px] font-bold text-red-400 uppercase tracking-widest border border-red-400/20 rounded">
@@ -985,18 +1012,18 @@ function ArchiveCard({ archive, onClick }: { archive: Archive; onClick: () => vo
         )}
       </div>
 
-      <div className="p-3 flex flex-col flex-1 gap-2">
-        <p className="text-[13px] text-white/75 font-medium leading-snug line-clamp-2 group-hover:text-white transition-colors">
+      <div className="p-3 flex flex-col gap-1.5">
+        <p className="text-[12px] text-white/70 font-medium leading-snug group-hover:text-white transition-colors">
           {archive.description || 'Untitled'}
         </p>
-        <div className="mt-auto flex items-center justify-between pt-1 border-t border-white/[0.06]">
+        <div className="flex items-center justify-between pt-1.5 border-t border-white/[0.06]">
           <div className="flex items-center gap-1.5">
             <Calendar className="w-3 h-3 text-red-400 flex-shrink-0" />
-            <span className="text-[10px] text-white/40" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            <span className="text-[10px] text-white/35" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
               {formatDate(archive.date, archive.date_unknown)}
             </span>
           </div>
-          <ChevronRight className="w-3.5 h-3.5 text-white/15 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all" />
+          <ChevronRight className="w-3 h-3 text-white/15 group-hover:text-red-400 group-hover:translate-x-0.5 transition-all" />
         </div>
       </div>
     </motion.div>
@@ -1179,7 +1206,7 @@ function Dashboard({ session }: { session: Session | null }) {
             </div>
           ) : filtered.length > 0 ? (
             <motion.div
-              className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+              className="columns-2 lg:columns-3 gap-3"
               initial="hidden"
               animate="visible"
               variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.04 } } }}
