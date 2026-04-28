@@ -1344,7 +1344,7 @@ function UserProfilePage({ profiles: _ignored, username: usernameProp }: { profi
     <div className="min-h-screen bg-[#131313] flex flex-col items-center justify-center gap-4 px-4" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
       <div className="text-center">
         <p className="text-white/10 text-6xl font-bold mb-4">404</p>
-        <p className="text-white/50 text-sm font-semibold">User <span className="text-red-400">@{username}</span> tidak ditemukan</p>
+        <p className="text-white/50 text-sm font-semibold">User <span className="text-red-400">{username}</span> tidak ditemukan</p>
         <p className="text-white/25 text-xs mt-1">Username mungkin salah atau belum terdaftar</p>
       </div>
       <button
