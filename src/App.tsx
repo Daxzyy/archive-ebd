@@ -137,7 +137,7 @@ function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null;
               <div className="grid grid-cols-2 gap-2">
                 <MetaCell icon={<Calendar className="w-3.5 h-3.5 text-red-400" />} label="Tanggal" value={formatDate(archive.date, archive.date_unknown)} />
                 <MetaCell icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Source" value={archive.source || 'Unknown'} />
-                <MetaCellLink icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Upload by" value={uploader} href={`/@${uploader}`} />
+                <MetaCellLink icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Upload by" value={uploader} href={uploader !== 'Unknown' ? `/@${uploader}` : '#'} />
                 <MetaCell icon={<Hash className="w-3.5 h-3.5 text-red-400" />} label="Tags" value={archive.tags?.length > 0 ? archive.tags.join(', ') : 'Untagged'} />
               </div>
             </div>
@@ -983,12 +983,13 @@ function Dashboard({ session }: { session: Session | null }) {
     try {
       setLoading(true);
       const supabase = getSupabase();
-      const { data, error } = await supabase
-        .from('archives')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const [{ data, error }, { data: profileData }] = await Promise.all([
+        supabase.from('archives').select('*').order('created_at', { ascending: false }),
+        supabase.from('profiles').select('*'),
+      ]);
       if (error) throw error;
       setArchives(data || []);
+      setProfiles(profileData || []);
       const tags = new Set<string>();
       const years = new Set<string>();
       data?.forEach((a: Archive) => {
@@ -997,8 +998,6 @@ function Dashboard({ session }: { session: Session | null }) {
       });
       setAllTags(Array.from(tags).sort());
       setAllYears(Array.from(years).sort((a, b) => b.localeCompare(a)));
-      const { data: profileData } = await supabase.from('profiles').select('*');
-      setProfiles(profileData || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -1364,7 +1363,7 @@ function UserProfilePage({ profiles: _ignored }: { profiles: Profile[] }) {
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {archives.map(a => (
-                <div key={a.id} onClick={() => navigate('/')} className="group border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300 flex flex-col overflow-hidden rounded-xl cursor-pointer">
+                <div key={a.id} className="group border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300 flex flex-col overflow-hidden rounded-xl">
                   <div className="relative h-28 bg-white/5 overflow-hidden flex-shrink-0">
                     <img src={a.image_url} alt={a.description} loading="lazy" className="w-full h-full object-cover transition-all duration-500 group-hover:scale-[1.04]" />
                     {a.tags?.length > 0 && (
