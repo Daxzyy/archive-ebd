@@ -1323,41 +1323,38 @@ function UserProfilePage({ profiles: _ignored }: { profiles: Profile[] }) {
           <button onClick={() => navigate('/')} className="text-sm font-bold text-white/90 tracking-tight pixel-text hover:text-white transition-colors">
             Eberardos
             <span className="text-white/20 mx-1.5 font-light">/</span>
-            <span className="text-white/40 font-medium">@{username}</span>
+            <span className="text-white/40 font-medium">@{username?.startsWith('@') ? username.slice(1) : username}</span>
           </button>
           <button
             onClick={() => navigate('/')}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-[11px] font-bold text-white/35 hover:text-white tracking-wider"
           >
-            <ArchiveIcon className="w-3 h-3" /> Archive
+            <ArrowLeft className="w-3 h-3" /> Back
           </button>
         </div>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-4 py-10">
-        <div className="flex items-start gap-5 mb-8">
-          <div className="w-16 h-16 rounded-full bg-red-400/20 border-2 border-red-400/30 flex items-center justify-center overflow-hidden flex-shrink-0">
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        <div className="flex items-center gap-4 mb-4 pb-4 border-b border-white/[0.06]">
+          <div className="w-20 h-20 rounded-full bg-red-400/20 border-2 border-red-400/30 flex items-center justify-center overflow-hidden flex-shrink-0">
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt={profile.display_name || ''} className="w-full h-full object-cover" />
             ) : (
-              <span className="text-2xl font-bold text-red-400 uppercase">{(profile?.display_name || '?')[0]}</span>
+              <span className="text-3xl font-bold text-red-400 uppercase">{(profile?.display_name || '?')[0]}</span>
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-lg font-bold text-white/90 tracking-tight">{profile?.display_name}</h1>
-            <p className="text-[12px] text-white/30 mb-2">@{username}</p>
-            {(profile as any)?.bio && <p className="text-[13px] text-white/55 leading-relaxed">{(profile as any).bio}</p>}
-            <div className="flex items-center gap-4 mt-3">
-              <div className="flex flex-col">
-                <span className="text-base font-bold text-white/80" style={{ fontFamily: "'JetBrains Mono', monospace" }}>{archives.length}</span>
-                <span className="text-[10px] text-white/25 uppercase tracking-widest font-bold">Arsip</span>
-              </div>
+            <div className="flex items-center justify-between">
+              <h1 className="text-base font-bold text-white/90 tracking-tight leading-tight">{profile?.display_name}</h1>
+              <span className="text-[11px] text-white/40 font-medium tabular-nums">{archives.length} posts</span>
             </div>
+            <p className="text-[12px] text-white/35 leading-tight mb-1">@{username?.startsWith('@') ? username.slice(1) : username}</p>
+            {(profile as any)?.bio && <p className="text-[12px] text-white/50 leading-snug">{(profile as any).bio}</p>}
           </div>
         </div>
 
         <div className="mb-4">
-          <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-3">Upload oleh @{username}</p>
+          <p className="text-[9px] font-bold text-white/20 uppercase tracking-widest mb-3 opacity-50">@{username?.startsWith('@') ? username.slice(1) : username}</p>
           {archives.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 border border-dashed border-white/[0.07] rounded-xl">
               <p className="text-white/20 text-sm">Belum ada arsip</p>
