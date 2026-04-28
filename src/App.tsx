@@ -554,7 +554,8 @@ function Login() {
         setShake(true);
         setTimeout(() => setShake(false), 500);
       } else {
-        navigate('/');
+        const params = new URLSearchParams(window.location.search);
+        navigate(params.get('next') || '/');
       }
     } catch {
       setError('Connection error. Try again.');
@@ -1467,7 +1468,7 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/@:username" element={session ? <UserProfilePage profiles={[]} /> : <Navigate to="/login" />} />
+        <Route path="/@:username" element={session ? <UserProfilePage profiles={[]} /> : <Navigate to={`/login?next=${encodeURIComponent(window.location.pathname)}`} replace />} />
         <Route path="/" element={session ? <Dashboard session={session} /> : <Navigate to="/login" />} />
         <Route path="/login" element={session ? <Navigate to="/" /> : <Login />} />
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
