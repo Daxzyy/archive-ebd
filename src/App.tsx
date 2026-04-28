@@ -1213,18 +1213,18 @@ function Dashboard({ session }: { session: Session | null }) {
 }
 
 function MetaCellLink({ icon, label, value, href }: { icon: React.ReactNode; label: string; value: string; href: string }) {
-  const navigate = useNavigate();
   return (
-    <div
-      onClick={(e) => { e.stopPropagation(); navigate(href); }}
-      className="bg-white/[0.03] border border-white/[0.07] hover:border-white/20 hover:bg-white/[0.06] rounded-xl p-3 flex flex-col gap-1.5 cursor-pointer transition-all group"
+    
+      href={href}
+      onClick={(e) => e.stopPropagation()}
+      className="bg-white/[0.03] border border-white/[0.07] hover:border-white/20 hover:bg-white/[0.06] rounded-xl p-3 flex flex-col gap-1.5 cursor-pointer transition-all group no-underline"
     >
       <div className="flex items-center gap-1.5">
         {icon}
         <span className="text-[9px] font-bold text-white/25 uppercase tracking-widest">{label}</span>
       </div>
       <p className="text-[12px] text-red-400/80 group-hover:text-red-400 font-medium leading-tight underline decoration-dotted underline-offset-2">{value}</p>
-    </div>
+    </a>
   );
 }
 
