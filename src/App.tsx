@@ -895,16 +895,16 @@ function TabBar({ session, profiles, currentPath }: { session: Session; profiles
       path: '/',
       label: 'Home',
       icon: (active: boolean) => (
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
           <path d="M9 21V12h6v9"/>
         </svg>
       ),
     },
     {
-      path: '/explore',
-      label: 'Explore',
-      icon: (active: boolean) => (
+      path: '/search',
+      label: 'Search',
+      icon: (_active: boolean) => (
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="8"/>
           <path d="m21 21-4.35-4.35"/>
@@ -1169,18 +1169,6 @@ function Dashboard({ session }: { session: Session | null }) {
                 </button>
               )}
             </div>
-
-            {/* Mobile search */}
-            <div className="flex md:hidden relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/20" />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                className="w-32 bg-white/[0.03] border border-white/[0.07] pl-7 pr-3 py-1.5 text-[12px] text-white/80 placeholder:text-white/20 focus:outline-none focus:border-white/20 transition-all rounded-lg"
-              />
-            </div>
           </div>
 
           {loading ? (
@@ -1414,6 +1402,154 @@ function UserProfilePage({ profiles: _ignored }: { profiles: Profile[] }) {
   );
 }
 
+function SearchPage({ session }: { session: Session }) {
+  const [query, setQuery] = useState('');
+  const [archives, setArchives] = useState<Archive[]>([]);
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
+  const [allYears, setAllYears] = useState<string[]>([]);
+  const [selectedTag, setSelectedTag] = useState('All');
+  const [selectedYear, setSelectedYear] = useState('All');
+  const [loading, setLoading] = useState(true);
+  const [selectedArchive, setSelectedArchive] = useState<Archive | null>(null);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const fetchAll = async () => {
+      const supabase = getSupabase();
+      const [{ data }, { data: profileData }] = await Promise.all([
+        supabase.from('archives').select('*').order('created_at', { ascending: false }),
+        supabase.from('profiles').select('*'),
+      ]);
+      setArchives(data || []);
+      setProfiles(profileData || []);
+      const tags = new Set<string>();
+      const years = new Set<string>();
+      data?.forEach((a: Archive) => {
+        a.tags?.forEach((t: string) => tags.add(t));
+        if (a.date) years.add(new Date(a.date).getFullYear().toString());
+      });
+      setAllTags(Array.from(tags).sort());
+      setAllYears(Array.from(years).sort((a, b) => b.localeCompare(a)));
+      setLoading(false);
+    };
+    fetchAll();
+    setTimeout(() => inputRef.current?.focus(), 100);
+  }, []);
+
+  const filtered = archives.filter(a => {
+    const q = query.toLowerCase();
+    const matchSearch = !q ||
+      a.description?.toLowerCase().includes(q) ||
+      a.tags?.some(t => t.toLowerCase().includes(q)) ||
+      a.source?.toLowerCase().includes(q);
+    const matchTag = selectedTag === 'All' || a.tags?.includes(selectedTag);
+    const matchYear = selectedYear === 'All' || (a.date && new Date(a.date).getFullYear().toString() === selectedYear);
+    return matchSearch && matchTag && matchYear;
+  });
+
+  const hasFilters = !!(query || selectedTag !== 'All' || selectedYear !== 'All');
+
+  return (
+    <div className="min-h-screen bg-[#131313] text-neutral-200" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
+      <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#131313]/90 backdrop-blur-md">
+        <div className="max-w-6xl mx-auto px-4 flex items-center justify-between" style={{ height: 52 }}>
+          <h1 className="text-sm font-bold text-white/90 tracking-tight pixel-text">
+            Eberardos
+            <span className="text-white/20 mx-1.5 font-light">/</span>
+            <span className="text-white/40 font-medium">search</span>
+          </h1>
+        </div>
+      </nav>
+
+      <div className="max-w-2xl mx-auto px-4 py-5">
+        {/* Search input */}
+        <div className="relative mb-4">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Cari arsip, tag, atau source..."
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            className="w-full bg-white/[0.04] border border-white/[0.10] focus:border-white/25 rounded-xl py-3 pl-10 pr-10 text-sm text-white/80 placeholder:text-white/25 focus:outline-none transition-all"
+          />
+          {query && (
+            <button onClick={() => setQuery('')} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/20 hover:text-white/50 transition-colors">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter chips */}
+        {(allTags.length > 0 || allYears.length > 0) && (
+          <div className="flex gap-2 flex-wrap mb-4">
+            {allYears.map(y => (
+              <button
+                key={y}
+                onClick={() => setSelectedYear(selectedYear === y ? 'All' : y)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide border transition-all ${
+                  selectedYear === y ? 'bg-red-400/15 border-red-400/40 text-red-400' : 'bg-white/[0.03] border-white/[0.08] text-white/30 hover:text-white/60 hover:border-white/20'
+                }`}
+              >{y}</button>
+            ))}
+            {allTags.map(t => (
+              <button
+                key={t}
+                onClick={() => setSelectedTag(selectedTag === t ? 'All' : t)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide border transition-all ${
+                  selectedTag === t ? 'bg-red-400/15 border-red-400/40 text-red-400' : 'bg-white/[0.03] border-white/[0.08] text-white/30 hover:text-white/60 hover:border-white/20'
+                }`}
+              >{t}</button>
+            ))}
+          </div>
+        )}
+
+        {/* Result count */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[12px] text-white/30">{hasFilters ? 'Hasil' : 'Semua'}</span>
+          {!loading && (
+            <span className="px-2 py-0.5 bg-white/10 border border-white/15 rounded-full text-[11px] font-bold text-white tabular-nums" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+              {filtered.length} <span className="text-white/40 font-normal">items</span>
+            </span>
+          )}
+          {hasFilters && (
+            <button onClick={() => { setQuery(''); setSelectedTag('All'); setSelectedYear('All'); }} className="text-[11px] text-red-400/60 hover:text-red-400 transition-colors">× clear</button>
+          )}
+        </div>
+
+        {/* Grid */}
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3">
+            {[...Array(4)].map((_, i) => <div key={i} className="h-44 border border-white/[0.06] bg-white/[0.02] animate-pulse rounded-xl" />)}
+          </div>
+        ) : filtered.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3">
+            {filtered.map(a => (
+              <ArchiveCard key={a.id} archive={a} onClick={() => setSelectedArchive(a)} />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 border border-dashed border-white/[0.07] rounded-xl gap-2">
+            <Search className="w-6 h-6 text-white/10" />
+            <p className="text-white/20 text-sm">Ga ada hasil</p>
+            {hasFilters && <button onClick={() => { setQuery(''); setSelectedTag('All'); setSelectedYear('All'); }} className="text-[11px] text-red-400/50 hover:text-red-400 transition-colors">Clear filter</button>}
+          </div>
+        )}
+      </div>
+
+      <footer className="border-t border-white/[0.05] py-5 mt-4 mb-16">
+        <div className="max-w-6xl mx-auto px-4">
+          <p className="text-[11px] text-white/20 text-center">© 2026 Eberardos Community</p>
+        </div>
+      </footer>
+
+      <ArchiveModal archive={selectedArchive} onClose={() => setSelectedArchive(null)} profiles={profiles} />
+      <TabBar session={session} profiles={profiles} currentPath="/search" />
+    </div>
+  );
+}
+
 function LogoutPage() {
   const navigate = useNavigate();
   useEffect(() => {
@@ -1486,6 +1622,7 @@ export default function App() {
 <Routes>
         <Route path="/" element={session ? <Dashboard session={session} /> : <Navigate to="/login" />} />
         <Route path="/login" element={session ? <Navigate to="/" /> : <Login />} />
+        <Route path="/search" element={session ? <SearchPage session={session} /> : <Navigate to="/login" />} />
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
         <Route path="/profile" element={session ? <ProfilePage session={session} /> : <Navigate to="/login" />} />
         <Route path="/logout" element={<LogoutPage />} />
