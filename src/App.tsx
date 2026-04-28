@@ -1001,7 +1001,7 @@ function ArchiveCard({ archive, onClick }: { archive: Archive; onClick: () => vo
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      onClick={() => navigate(`/a/${archive.slug}`)}
+      onClick={() => navigate(`/${archive.slug}`)}
       className="group border border-white/10 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/20 transition-all duration-300 cursor-pointer overflow-hidden rounded-xl break-inside-avoid mb-3"
     >
       <div className="relative bg-white/5 overflow-hidden">
@@ -1592,6 +1592,7 @@ function ArchiveDetailPage({ session }: { session: Session | null }) {
   const [uploader, setUploader] = useState<string>('Unknown');
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   useDynamicMeta(
     archive ? `${archive.description} — Eberardos Archive` : 'Eberardos Archive',
@@ -1642,16 +1643,50 @@ function ArchiveDetailPage({ session }: { session: Session | null }) {
             <span className="text-white/20 mx-1.5 font-light">/</span>
             <span className="text-white/40 font-medium">archive</span>
           </button>
-          <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.04] hover:bg-white/[0.08] transition-all text-[11px] font-bold text-white/35 hover:text-white tracking-wider">
-            <ArrowLeft className="w-3 h-3" /> Back
-          </button>
+          <span />
         </div>
       </nav>
 
       <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-5">
-        <div className="rounded-xl overflow-hidden bg-black border border-white/10">
-          <img src={archive.image_url} alt={archive.description} className="w-full h-auto object-contain" />
+        <button
+          onClick={() => navigate(-1)}
+          className="inline-flex items-center gap-1.5 text-white/25 hover:text-white transition-colors text-[11px] font-bold uppercase tracking-wider group w-fit"
+        >
+          <ArrowLeft className="w-3 h-3 group-hover:-translate-x-0.5 transition-transform" />
+          Back
+        </button>
+
+        <div
+          className="relative rounded-xl overflow-hidden bg-black border border-white/10 cursor-zoom-in group"
+          onClick={() => setLightboxOpen(true)}
+        >
+          <img src={archive.image_url} alt={archive.description} className="w-full max-h-[420px] object-contain block" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-all">
+            <div className="opacity-0 group-hover:opacity-100 transition-all w-9 h-9 rounded-full bg-black/60 border border-white/20 flex items-center justify-center">
+              <ExternalLink className="w-4 h-4 text-white/80" />
+            </div>
+          </div>
         </div>
+
+        {lightboxOpen && (
+          <div
+            className="fixed inset-0 z-[90] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4"
+            onClick={() => setLightboxOpen(false)}
+          >
+            <button
+              onClick={() => setLightboxOpen(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/10 rounded-full transition-all"
+            >
+              <X className="w-4 h-4 text-white/70" />
+            </button>
+            <img
+              src={archive.image_url}
+              alt={archive.description}
+              className="max-w-full max-h-full object-contain rounded-lg"
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+        )}
 
         <div className="flex flex-col gap-4">
           <div>
@@ -1673,10 +1708,6 @@ function ArchiveDetailPage({ session }: { session: Session | null }) {
               </Link>
             </div>
           </div>
-          <div className="border-t border-white/[0.07]" />
-          <a href={archive.image_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 px-3 py-2.5 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 rounded-xl text-[12px] text-white/50 hover:text-white transition-all w-fit">
-            <ExternalLink className="w-3.5 h-3.5" /> Lihat foto asli
-          </a>
         </div>
       </div>
 
@@ -1689,6 +1720,14 @@ function ArchiveDetailPage({ session }: { session: Session | null }) {
       {session && <TabBar session={session} profiles={[]} currentPath="" />}
     </div>
   );
+}
+
+function SlugOrUserRouter({ session }: { session: Session | null }) {
+  const { slug } = useParams<{ slug: string }>();
+  if (slug?.startsWith('@')) {
+    return <UserProfilePage profiles={[]} />;
+  }
+  return <ArchiveDetailPage session={session} />;
 }
 
 function LogoutPage() {
@@ -1767,8 +1806,7 @@ export default function App() {
         <Route path="/admin" element={session ? <Admin session={session} /> : <Navigate to="/login" />} />
         <Route path="/profile" element={session ? <ProfilePage session={session} /> : <Navigate to="/login" />} />
         <Route path="/logout" element={<LogoutPage />} />
-        <Route path="/a/:slug" element={<ArchiveDetailPage session={session} />} />
-        <Route path="/:username" element={<UserProfilePage profiles={[]} />} />
+        <Route path="/:slug" element={<SlugOrUserRouter session={session} />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
