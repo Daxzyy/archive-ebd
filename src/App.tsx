@@ -113,7 +113,7 @@ function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null;
               )}
               {/* Full image link */}
               
-                href={archive.image_url}
+                <a href={archive.image_url}
                 target="_blank"
                 rel="noreferrer"
                 className="absolute bottom-3 left-3 flex items-center gap-1.5 px-2 py-1 bg-black/60 hover:bg-black/90 backdrop-blur-sm border border-white/10 text-white/40 hover:text-white text-[10px] font-bold uppercase tracking-widest rounded-lg transition-all"
