@@ -579,7 +579,7 @@ function Login() {
         }
       `}</style>
 
-      <div className="fixed inset-0 bg-gradient-to-b from-[#131313] via-[#161414] to-[#131313] pointer-events-none" />
+      <div className="fixed inset-0 bg-[#131313] -z-10 pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, y: 12 }}
@@ -1026,7 +1026,7 @@ function Dashboard({ session }: { session: Session | null }) {
 
   return (
     <div className="min-h-screen bg-[#131313] text-neutral-200" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
-      <div className="fixed inset-0 bg-gradient-to-b from-[#131313] via-[#161414] to-[#131313] pointer-events-none" />
+      <div className="fixed inset-0 bg-[#131313] -z-10 pointer-events-none" />
 
       <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#131313]/90 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 h-13 flex items-center justify-between" style={{ height: 52 }}>
@@ -1317,7 +1317,7 @@ function UserProfilePage({ profiles: _ignored }: { profiles: Profile[] }) {
 
   return (
     <div className="min-h-screen bg-[#131313] text-neutral-200" style={{ fontFamily: "'Manrope', 'Inter', system-ui, sans-serif" }}>
-      <div className="fixed inset-0 bg-gradient-to-b from-[#131313] via-[#161414] to-[#131313] pointer-events-none" />
+      <div className="fixed inset-0 bg-[#131313] -z-10 pointer-events-none" />
 
       <nav className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#131313]/90 backdrop-blur-md">
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between" style={{ height: 52 }}>
