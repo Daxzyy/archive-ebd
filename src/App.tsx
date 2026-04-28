@@ -137,7 +137,7 @@ function ArchiveModal({ archive, onClose, profiles }: { archive: Archive | null;
               <div className="grid grid-cols-2 gap-2">
                 <MetaCell icon={<Calendar className="w-3.5 h-3.5 text-red-400" />} label="Tanggal" value={formatDate(archive.date, archive.date_unknown)} />
                 <MetaCell icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Source" value={archive.source || 'Unknown'} />
-                <MetaCellLink icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Upload by" value={uploader} href={uploader !== 'Unknown' ? `/@${uploader}` : '#'} />
+                <MetaCellLink icon={<User className="w-3.5 h-3.5 text-red-400" />} label="Upload by" value={uploader} href={uploader !== 'Unknown' ? `/${uploader}` : '#'} />
                 <MetaCell icon={<Hash className="w-3.5 h-3.5 text-red-400" />} label="Tags" value={archive.tags?.length > 0 ? archive.tags.join(', ') : 'Untagged'} />
               </div>
             </div>
@@ -1282,7 +1282,8 @@ function UserProfilePage({ profiles: _ignored }: { profiles: Profile[] }) {
           .eq('uploaded_by', profileData.id)
           .order('created_at', { ascending: false });
         setArchives(archiveData || []);
-      } catch {
+      } catch (e) {
+        console.error('Profile fetch error:', e);
         setNotFound(true);
       } finally {
         setLoading(false);
